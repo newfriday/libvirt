@@ -200,6 +200,7 @@
   <flag name='rotation-rate'/>
   <flag name='input-linux'/>
   <flag name='query-display-options'/>
+  <flag name='accel'/>
   <version>5002000</version>
   <kvmVersion>0</kvmVersion>
   <microcodeVersion>0</microcodeVersion>

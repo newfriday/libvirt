@@ -130,6 +130,7 @@
   <flag name='vhost-user-blk'/>
   <flag name='vnc-opts'/>
   <flag name='input-linux'/>
+  <flag name='accel'/>
   <version>3000000</version>
   <kvmVersion>0</kvmVersion>
   <microcodeVersion>39100239</microcodeVersion>

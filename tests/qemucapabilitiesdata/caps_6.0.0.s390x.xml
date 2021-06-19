@@ -168,6 +168,7 @@
   <flag name='input-linux'/>
   <flag name='confidential-guest-support'/>
   <flag name='query-display-options'/>
+  <flag name='accel'/>
   <version>6000000</version>
   <kvmVersion>0</kvmVersion>
   <microcodeVersion>39100242</microcodeVersion>

@@ -636,6 +636,7 @@ VIR_ENUM_IMPL(virQEMUCaps,
               /* 405 */
               "confidential-guest-support",
               "query-display-options",
+              "accel",
     );
 
 
@@ -3245,6 +3246,7 @@ static struct virQEMUCapsCommandLineProps virQEMUCapsCommandLine[] = {
     { "vnc", "display", QEMU_CAPS_VNC_OPTS },
     { "vnc", "power-control", QEMU_CAPS_VNC_POWER_CONTROL },
     { "vnc", "audiodev", QEMU_CAPS_AUDIODEV },
+    { "accel", NULL, QEMU_CAPS_ACCEL },
 };
 
 static int
