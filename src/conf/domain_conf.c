@@ -204,6 +204,7 @@ VIR_ENUM_IMPL(virDomainKVM,
               "hidden",
               "hint-dedicated",
               "poll-control",
+              "dirty-ring",
 );
 
 VIR_ENUM_IMPL(virDomainXen,
@@ -4752,6 +4753,16 @@ virDomainDefPostParseMemtune(virDomainDef *def)
     }
 }
 
+static void
+virDomainDefPostParseFeatures(virDomainDef *def)
+{
+    if (def->features[VIR_DOMAIN_FEATURE_KVM] == VIR_TRISTATE_SWITCH_ON &&
+        def->kvm_features[VIR_DOMAIN_KVM_DIRTY_RING] == VIR_TRISTATE_SWITCH_ON &&
+        def->dirty_ring_size == 0) {
+        /* set 4096 as default size if dirty ring size not congfigured */
+        def->dirty_ring_size = 4096;
+    }
+}
 
 static int
 virDomainDefAddConsoleCompat(virDomainDef *def)
@@ -6002,6 +6013,8 @@ virDomainDefPostParseCommon(virDomainDef *def,
     virDomainDefPostParseOs(def);
 
     virDomainDefPostParseMemtune(def);
+
+    virDomainDefPostParseFeatures(def);
 
     if (virDomainDefRejectDuplicateControllers(def) < 0)
         return -1;
@@ -21642,7 +21655,27 @@ virDomainDefFeaturesCheckABIStability(virDomainDef *src,
                                    virTristateSwitchTypeToString(dst->kvm_features[i]));
                     return false;
                 }
+                break;
 
+            case VIR_DOMAIN_KVM_DIRTY_RING:
+                if (src->kvm_features[i] != dst->kvm_features[i]) {
+                    virReportError(VIR_ERR_CONFIG_UNSUPPORTED,
+                                   _("State of KVM feature '%s' differs: "
+                                     "source: '%s', destination: '%s'"),
+                                   virDomainKVMTypeToString(i),
+                                   virTristateSwitchTypeToString(src->kvm_features[i]),
+                                   virTristateSwitchTypeToString(dst->kvm_features[i]));
+                    return false;
+                }
+
+                if (src->dirty_ring_size != dst->dirty_ring_size) {
+                    virReportError(VIR_ERR_CONFIG_UNSUPPORTED,
+                                   _("dirty ring size of KVM feature '%s' differs: "
+                                     "source: '%d', destination: '%d'"),
+                                   virDomainKVMTypeToString(i),
+                                   src->dirty_ring_size, dst->dirty_ring_size);
+                    return false;
+                }
                 break;
 
             case VIR_DOMAIN_KVM_LAST:
@@ -27618,6 +27651,15 @@ virDomainDefFormatFeatures(virBuffer *buf,
                                           virDomainKVMTypeToString(j),
                                           virTristateSwitchTypeToString(
                                               def->kvm_features[j]));
+                    break;
+
+                case VIR_DOMAIN_KVM_DIRTY_RING:
+                    if (def->kvm_features[j] != VIR_TRISTATE_SWITCH_ABSENT) {
+                        virBufferAsprintf(&childBuf, "<%s state='%s' size='%d'/>\n",
+                                          virDomainKVMTypeToString(j),
+                                          virTristateSwitchTypeToString(def->kvm_features[j]),
+                                          def->dirty_ring_size);
+                    }
                     break;
 
                 case VIR_DOMAIN_KVM_LAST:

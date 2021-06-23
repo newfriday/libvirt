@@ -2058,6 +2058,7 @@ typedef enum {
     VIR_DOMAIN_KVM_HIDDEN = 0,
     VIR_DOMAIN_KVM_DEDICATED,
     VIR_DOMAIN_KVM_POLLCONTROL,
+    VIR_DOMAIN_KVM_DIRTY_RING,
 
     VIR_DOMAIN_KVM_LAST
 } virDomainKVM;
@@ -2882,6 +2883,9 @@ struct _virDomainDef {
                              callbacks failed for a non-critical reason
                              (was not able to fill in some data) and thus
                              should be re-run before starting */
+
+    /* size of dirty ring for each vcpu */
+    unsigned int dirty_ring_size;
 };
 
 

@@ -6587,6 +6587,9 @@ qemuBuildCpuCommandLine(virCommand *cmd,
                     virBufferAddLit(&buf, ",kvm-poll-control=on");
                 break;
 
+            case VIR_DOMAIN_KVM_DIRTY_RING:
+                break;
+
             case VIR_DOMAIN_KVM_LAST:
                 break;
             }
