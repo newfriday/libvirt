@@ -6774,6 +6774,12 @@ qemuBuildAccelCommandLineKvmOptions(virCommand *cmd,
         g_auto(virBuffer) buf = VIR_BUFFER_INITIALIZER;
         virCommandAddArg(cmd, "-accel");
         virBufferAddLit(&buf, "kvm");
+
+        if (def->features[VIR_DOMAIN_FEATURE_KVM] == VIR_TRISTATE_SWITCH_ON &&
+            def->kvm_features[VIR_DOMAIN_KVM_DIRTY_RING] == VIR_TRISTATE_SWITCH_ON) {
+            virBufferAsprintf(&buf, ",dirty-ring-size=%d", def->dirty_ring_size);
+        }
+
         virCommandAddArgBuffer(cmd, &buf);
     }
 }
