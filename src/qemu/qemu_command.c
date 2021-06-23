@@ -6758,6 +6758,23 @@ qemuBuildNameCommandLine(virCommand *cmd,
     return 0;
 }
 
+static void
+qemuBuildAccelCommandLineKvmOptions(virCommand *cmd,
+                                    const virDomainDef *def)
+{
+    /*
+     * only handle the kvm case, tcg case use the legacy style
+     * not that either kvm or tcg can be specified by libvirt
+     * so do not worry about the conflict of specifying both
+     * */
+    if ((virDomainVirtType)def->virtType == VIR_DOMAIN_VIRT_KVM) {
+        g_auto(virBuffer) buf = VIR_BUFFER_INITIALIZER;
+        virCommandAddArg(cmd, "-accel");
+        virBufferAddLit(&buf, "kvm");
+        virCommandAddArgBuffer(cmd, &buf);
+    }
+}
+
 static int
 qemuBuildMachineCommandLine(virCommand *cmd,
                             virQEMUDriverConfig *cfg,
@@ -6779,8 +6796,16 @@ qemuBuildMachineCommandLine(virCommand *cmd,
         virBufferAddLit(&buf, ",accel=tcg");
         break;
 
+    /*
+     * QEMU greater than 2.9.0 support '-accel', change the way of
+     * building commandline from "accel=kvm" to "-accel kvm", skip
+     * setting accel property if we have ACCEL cap, leave the
+     * "qemuBuildAccelCommandLine" do this.
+     **/
     case VIR_DOMAIN_VIRT_KVM:
-        virBufferAddLit(&buf, ",accel=kvm");
+        if (!virQEMUCapsGet(qemuCaps, QEMU_CAPS_ACCEL)) {
+            virBufferAddLit(&buf, ",accel=kvm");
+        }
         break;
 
     case VIR_DOMAIN_VIRT_KQEMU:
@@ -10401,6 +10426,10 @@ qemuBuildCommandLine(virQEMUDriver *driver,
 
     if (qemuBuildMachineCommandLine(cmd, cfg, def, qemuCaps, priv) < 0)
         return NULL;
+
+    if (virQEMUCapsGet(qemuCaps, QEMU_CAPS_ACCEL)) {
+        qemuBuildAccelCommandLineKvmOptions(cmd, def);
+    }
 
     qemuBuildTSEGCommandLine(cmd, def);
 
