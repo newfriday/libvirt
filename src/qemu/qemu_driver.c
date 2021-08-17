@@ -4201,6 +4201,30 @@ processJobStatusChangeEvent(virQEMUDriver *driver,
 
 
 static void
+qemuDomainObjStartAfterCrash(virQEMUDriverPtr driver,
+                             virDomainObjPtr vm)
+{
+    virResetLastError();
+    if (qemuProcessBeginJob(driver, vm,
+                            VIR_DOMAIN_JOB_OPERATION_START, 0) < 0) {
+        virReportError(VIR_ERR_INTERNAL_ERROR,
+                       _("Failed to start job on VM '%s': %s"),
+                       vm->def->name, virGetLastErrorMessage());
+        return;
+    }
+
+    if (qemuDomainObjStart(NULL, driver, vm, 0,
+                           QEMU_ASYNC_JOB_START) < 0) {
+        virReportError(VIR_ERR_INTERNAL_ERROR,
+                       _("Failed to start VM '%s': %s"),
+                       vm->def->name, virGetLastErrorMessage());
+    }
+
+    qemuProcessEndJob(driver, vm);
+}
+
+
+static void
 processMonitorEOFEvent(virQEMUDriver *driver,
                        virDomainObj *vm)
 {
@@ -4243,6 +4267,11 @@ processMonitorEOFEvent(virQEMUDriver *driver,
  endjob:
     qemuDomainRemoveInactive(driver, vm);
     qemuDomainObjEndJob(driver, vm);
+
+    if (vm->def->onCrash == VIR_DOMAIN_LIFECYCLE_ACTION_RESTART &&
+        stopReason == VIR_DOMAIN_SHUTOFF_CRASHED) {
+        qemuDomainObjStartAfterCrash(driver, vm);
+    }
 }
 
 
