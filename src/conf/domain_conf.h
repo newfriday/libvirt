@@ -2084,6 +2084,7 @@ typedef enum {
     VIR_DOMAIN_KVM_DEDICATED,
     VIR_DOMAIN_KVM_POLLCONTROL,
     VIR_DOMAIN_KVM_PVIPI,
+    VIR_DOMAIN_KVM_DIRTY_RING,
 
     VIR_DOMAIN_KVM_LAST
 } virDomainKVM;
@@ -2933,6 +2934,9 @@ struct _virDomainDef {
                              should be re-run before starting */
 
     unsigned int scsiBusMaxUnit;
+
+    /* size of dirty ring for each vcpu */
+    unsigned int dirty_ring_size;
 };
 
 
