@@ -138,6 +138,7 @@
   <flag name='rotation-rate'/>
   <flag name='input-linux'/>
   <flag name='virtio-blk.queue-size'/>
+  <flag name='accel'/>
   <version>2012000</version>
   <kvmVersion>0</kvmVersion>
   <microcodeVersion>61700289</microcodeVersion>

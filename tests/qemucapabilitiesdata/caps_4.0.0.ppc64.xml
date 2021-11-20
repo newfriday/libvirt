@@ -161,6 +161,7 @@
   <flag name='input-linux'/>
   <flag name='query-display-options'/>
   <flag name='virtio-blk.queue-size'/>
+  <flag name='accel'/>
   <version>4000000</version>
   <kvmVersion>0</kvmVersion>
   <microcodeVersion>42900240</microcodeVersion>

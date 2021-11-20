@@ -651,6 +651,7 @@ VIR_ENUM_IMPL(virQEMUCaps,
               "device.json", /* QEMU_CAPS_DEVICE_JSON */
               "query-dirty-rate", /* QEMU_CAPS_QUERY_DIRTY_RATE */
               "rbd-encryption", /* QEMU_CAPS_RBD_ENCRYPTION */
+              "accel", /* QEMU_CAPS_ACCEL */
     );
 
 
@@ -3203,6 +3204,7 @@ static struct virQEMUCapsCommandLineProps virQEMUCapsCommandLine[] = {
     { "spice", "rendernode", QEMU_CAPS_SPICE_RENDERNODE },
     { "vnc", "power-control", QEMU_CAPS_VNC_POWER_CONTROL },
     { "vnc", "audiodev", QEMU_CAPS_AUDIODEV },
+    { "accel", NULL, QEMU_CAPS_ACCEL },
 };
 
 static int

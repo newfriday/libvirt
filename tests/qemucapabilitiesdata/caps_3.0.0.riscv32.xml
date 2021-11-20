@@ -75,6 +75,7 @@
   <flag name='migration-param.xbzrle-cache-size'/>
   <flag name='vhost-user-blk'/>
   <flag name='input-linux'/>
+  <flag name='accel'/>
   <version>3000000</version>
   <kvmVersion>0</kvmVersion>
   <microcodeVersion>0</microcodeVersion>

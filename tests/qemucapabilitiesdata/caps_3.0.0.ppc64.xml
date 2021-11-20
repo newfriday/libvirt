@@ -139,6 +139,7 @@
   <flag name='cpu-max'/>
   <flag name='input-linux'/>
   <flag name='virtio-blk.queue-size'/>
+  <flag name='accel'/>
   <version>2012050</version>
   <kvmVersion>0</kvmVersion>
   <microcodeVersion>42900239</microcodeVersion>
