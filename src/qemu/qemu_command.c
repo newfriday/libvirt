@@ -6860,6 +6860,9 @@ qemuBuildCpuCommandLine(virCommand *cmd,
                     virBufferAddLit(&buf, ",kvm-pv-ipi=off");
                 break;
 
+            case VIR_DOMAIN_KVM_DIRTY_RING:
+                break;
+
             case VIR_DOMAIN_KVM_LAST:
                 break;
             }
