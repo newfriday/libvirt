@@ -20648,9 +20648,13 @@ qemuDomainStartDirtyRateCalc(virDomainPtr dom,
     virDomainObj *vm = NULL;
     qemuDomainObjPrivate *priv;
     g_autoptr(virQEMUCaps) qemucaps = NULL;
+    qemuMonitorDirtyRateCalcMode calcmode = VIR_DOMAIN_DIRTYRATE_CALC_MODE_PAGE_SAMPLING;
+    bool mode = false;
     int ret = -1;
 
-    virCheckFlags(0, -1);
+    virCheckFlags(VIR_DOMAIN_DIRTYRATE_MODE_PAGE_SAMPLING |
+                  VIR_DOMAIN_DIRTYRATE_MODE_DIRTY_BITMAP |
+                  VIR_DOMAIN_DIRTYRATE_MODE_DIRTY_RING, -1);
 
     if (!(qemucaps = virQEMUCapsCacheLookupDefault(driver->qemuCapsCache,
                                                    NULL, NULL, NULL, NULL,
@@ -20661,6 +20665,15 @@ qemuDomainStartDirtyRateCalc(virDomainPtr dom,
         virReportError(VIR_ERR_OPERATION_UNSUPPORTED, "%s",
                        _("QEMU does not support calculating dirty page rate"));
         return -1;
+    }
+
+    mode = virQEMUCapsGet(qemucaps, QEMU_CAPS_DIRTYRATE_MODE);
+
+    if (!mode && (flags & VIR_DOMAIN_DIRTYRATE_MODE_DIRTY_BITMAP ||
+                 (flags & VIR_DOMAIN_DIRTYRATE_MODE_DIRTY_RING))) {
+        virReportError(VIR_ERR_OPERATION_UNSUPPORTED, "%s",
+                       _("QEMU does not support calculating dirty page rate"
+                         "with specified mode"));
     }
 
     if (seconds < MIN_DIRTYRATE_CALC_PERIOD ||
@@ -20675,6 +20688,22 @@ qemuDomainStartDirtyRateCalc(virDomainPtr dom,
 
     if (!(vm = qemuDomainObjFromDomain(dom)))
         return -1;
+
+    if (mode) {
+        /* libvirt-domain.c already guaranteed these two flags are exclusive.  */
+        if (flags & VIR_DOMAIN_DIRTYRATE_MODE_DIRTY_BITMAP) {
+            calcmode = VIR_DOMAIN_DIRTYRATE_CALC_MODE_DIRTY_BITMAP;
+        } else if (flags & VIR_DOMAIN_DIRTYRATE_MODE_DIRTY_RING) {
+            if (vm->def->features[VIR_DOMAIN_FEATURE_KVM] != VIR_TRISTATE_SWITCH_ON ||
+                vm->def->kvm_features->features[VIR_DOMAIN_KVM_DIRTY_RING] != VIR_TRISTATE_SWITCH_ON) {
+                virReportError(VIR_ERR_OPERATION_UNSUPPORTED, "%s",
+                               _("Calculating dirty page rate with dirty-ring requires"
+                                 "dirty-ring feature enabled."));
+                goto cleanup;
+            }
+            calcmode = VIR_DOMAIN_DIRTYRATE_CALC_MODE_DIRTY_RING;
+        }
+    }
 
     if (virDomainStartDirtyRateCalcEnsureACL(dom->conn, vm->def) < 0)
         goto cleanup;
@@ -20692,7 +20721,7 @@ qemuDomainStartDirtyRateCalc(virDomainPtr dom,
 
     priv = vm->privateData;
     qemuDomainObjEnterMonitor(driver, vm);
-    ret = qemuMonitorStartDirtyRateCalc(priv->mon, seconds);
+    ret = qemuMonitorStartDirtyRateCalc(priv->mon, seconds, calcmode);
 
     qemuDomainObjExitMonitor(driver, vm);
 
