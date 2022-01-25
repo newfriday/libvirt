@@ -20647,9 +20647,21 @@ qemuDomainStartDirtyRateCalc(virDomainPtr dom,
     virQEMUDriver *driver = dom->conn->privateData;
     virDomainObj *vm = NULL;
     qemuDomainObjPrivate *priv;
+    g_autoptr(virQEMUCaps) qemucaps = NULL;
     int ret = -1;
 
     virCheckFlags(0, -1);
+
+    if (!(qemucaps = virQEMUCapsCacheLookupDefault(driver->qemuCapsCache,
+                                                   NULL, NULL, NULL, NULL,
+                                                   NULL, NULL, NULL)))
+        return -1;
+
+    if (!virQEMUCapsGet(qemucaps, QEMU_CAPS_CALC_DIRTY_RATE)) {
+        virReportError(VIR_ERR_OPERATION_UNSUPPORTED, "%s",
+                       _("QEMU does not support calculating dirty page rate"));
+        return -1;
+    }
 
     if (seconds < MIN_DIRTYRATE_CALC_PERIOD ||
         seconds > MAX_DIRTYRATE_CALC_PERIOD) {
