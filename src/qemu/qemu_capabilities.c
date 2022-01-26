@@ -658,6 +658,7 @@ VIR_ENUM_IMPL(virQEMUCaps,
               /* 420 */
               "device.json+hotplug", /* QEMU_CAPS_DEVICE_JSON */
               "calc-dirty-rate", /* QEMU_CAPS_CALC_DIRTY_RATE */
+              "dirtyrate-param.mode", /* QEMU_CAPS_DIRTYRATE_MODE */
     );
 
 
@@ -1576,6 +1577,7 @@ static struct virQEMUCapsStringFlags virQEMUCapsQMPSchemaQueries[] = {
     { "screendump/arg-type/device", QEMU_CAPS_SCREENDUMP_DEVICE },
     { "set-numa-node/arg-type/+hmat-lb", QEMU_CAPS_NUMA_HMAT },
     { "object-add/arg-type/+sev-guest/kernel-hashes", QEMU_CAPS_SEV_GUEST_KERNEL_HASHES },
+    { "calc-dirty-rate/arg-type/mode", QEMU_CAPS_DIRTYRATE_MODE },
 };
 
 typedef struct _virQEMUCapsObjectTypeProps virQEMUCapsObjectTypeProps;

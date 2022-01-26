@@ -241,6 +241,7 @@
   <flag name='sev-inject-launch-secret'/>
   <flag name='device.json+hotplug'/>
   <flag name='calc-dirty-rate'/>
+  <flag name='dirtyrate-param.mode'/>
   <version>6002050</version>
   <kvmVersion>0</kvmVersion>
   <microcodeVersion>43100243</microcodeVersion>
