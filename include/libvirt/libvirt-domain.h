@@ -5241,6 +5241,19 @@ int virDomainGetMessages(virDomainPtr domain,
                          char ***msgs,
                          unsigned int flags);
 
+/**
+ * virDomainDirtyRateCalcFlags:
+ *
+ * Flags OR'ed together to provide specific behaviour when calculating dirty page
+ * rate for a Domain
+ *
+ */
+typedef enum {
+    VIR_DOMAIN_DIRTYRATE_MODE_PAGE_SAMPLING = 0,        /* default mode - page-sampling */
+    VIR_DOMAIN_DIRTYRATE_MODE_DIRTY_BITMAP = 1 << 0,    /* dirty-bitmap mode */
+    VIR_DOMAIN_DIRTYRATE_MODE_DIRTY_RING = 1 << 1,      /* dirty-ring mode */
+} virDomainDirtyRateCalcFlags;
+
 int virDomainStartDirtyRateCalc(virDomainPtr domain,
                                 int seconds,
                                 unsigned int flags);
