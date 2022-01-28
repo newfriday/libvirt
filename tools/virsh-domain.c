@@ -14465,6 +14465,20 @@ static const vshCmdOptDef opts_domdirtyrate_calc[] = {
      .help = N_("calculate memory dirty rate within specified seconds, "
                 "the supported value range from 1 to 60, default to 1.")
     },
+    {.name = "page-sampling",
+     .type = VSH_OT_BOOL,
+     .help = N_("dirty page rate is calculated by sampling memory.")
+    },
+    {.name = "dirty-bitmap",
+     .type = VSH_OT_BOOL,
+     .help = N_("dirty page rate is calculated by recording dirty bitmap "
+                "during calculation period.")
+    },
+    {.name = "dirty-ring",
+     .type = VSH_OT_BOOL,
+     .help = N_("dirty page rate is calculated by recording dirty pages "
+                "for a virtual CPU when dirty-ring feature enabled.")
+    },
     {.name = NULL}
 };
 
@@ -14473,6 +14487,7 @@ cmdDomDirtyRateCalc(vshControl *ctl, const vshCmd *cmd)
 {
     g_autoptr(virshDomain) dom = NULL;
     int seconds = 1; /* the default value is 1 */
+    unsigned int flags = 0;
 
     if (!(dom = virshCommandOptDomain(ctl, cmd, NULL)))
         return false;
@@ -14480,7 +14495,18 @@ cmdDomDirtyRateCalc(vshControl *ctl, const vshCmd *cmd)
     if (vshCommandOptInt(ctl, cmd, "seconds", &seconds) < 0)
         return false;
 
-    if (virDomainStartDirtyRateCalc(dom, seconds, 0) < 0)
+    VSH_EXCLUSIVE_OPTIONS("page-sampling", "dirty-bitmap");
+    VSH_EXCLUSIVE_OPTIONS("page-sampling", "dirty-ring");
+    VSH_EXCLUSIVE_OPTIONS("dirty-bitmap", "dirty-ring");
+
+    if (vshCommandOptBool(cmd, "page-sampling"))
+        flags |= VIR_DOMAIN_DIRTYRATE_MODE_PAGE_SAMPLING;
+    if (vshCommandOptBool(cmd, "dirty-bitmap"))
+        flags |= VIR_DOMAIN_DIRTYRATE_MODE_DIRTY_BITMAP;;
+    if (vshCommandOptBool(cmd, "dirty-ring"))
+        flags |= VIR_DOMAIN_DIRTYRATE_MODE_DIRTY_RING;;
+
+    if (virDomainStartDirtyRateCalc(dom, seconds, flags) < 0)
         return false;
 
     vshPrintExtra(ctl, _("Start to calculate domain's memory "

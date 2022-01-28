@@ -20651,7 +20651,9 @@ qemuDomainStartDirtyRateCalc(virDomainPtr dom,
         VIR_DOMAIN_DIRTYRATE_CALC_MODE_PAGE_SAMPLING;
     int ret = -1;
 
-    virCheckFlags(0, -1);
+    virCheckFlags(VIR_DOMAIN_DIRTYRATE_MODE_PAGE_SAMPLING |
+                  VIR_DOMAIN_DIRTYRATE_MODE_DIRTY_BITMAP |
+                  VIR_DOMAIN_DIRTYRATE_MODE_DIRTY_RING, -1);
 
     if (seconds < MIN_DIRTYRATE_CALC_PERIOD ||
         seconds > MAX_DIRTYRATE_CALC_PERIOD) {
@@ -20684,6 +20686,26 @@ qemuDomainStartDirtyRateCalc(virDomainPtr dom,
     if (!virQEMUCapsGet(priv->qemuCaps, QEMU_CAPS_CALC_DIRTY_RATE)) {
         virReportError(VIR_ERR_OPERATION_UNSUPPORTED, "%s",
                        _("QEMU does not support calculating dirty page rate"));
+        goto endjob;
+    }
+
+    if (virQEMUCapsGet(priv->qemuCaps, QEMU_CAPS_DIRTYRATE_MODE)) {
+        /* libvirt-domain.c already guaranteed these two flags are exclusive.  */
+        if (flags & VIR_DOMAIN_DIRTYRATE_MODE_DIRTY_BITMAP) {
+            mode = VIR_DOMAIN_DIRTYRATE_CALC_MODE_DIRTY_BITMAP;
+        } else if (flags & VIR_DOMAIN_DIRTYRATE_MODE_DIRTY_RING) {
+            if (vm->def->features[VIR_DOMAIN_FEATURE_KVM] != VIR_TRISTATE_SWITCH_ON ||
+                vm->def->kvm_features->features[VIR_DOMAIN_KVM_DIRTY_RING] != VIR_TRISTATE_SWITCH_ON) {
+                virReportError(VIR_ERR_OPERATION_UNSUPPORTED, "%s",
+                               _("dirty-ring calculation mode requires dirty-ring feature enabled."));
+                goto endjob;
+            }
+            mode = VIR_DOMAIN_DIRTYRATE_CALC_MODE_DIRTY_RING;
+        }
+    } else if ((flags & VIR_DOMAIN_DIRTYRATE_MODE_DIRTY_BITMAP ||
+               (flags & VIR_DOMAIN_DIRTYRATE_MODE_DIRTY_RING))) {
+        virReportError(VIR_ERR_OPERATION_UNSUPPORTED, "%s",
+                       _("QEMU does not support dirty page rate calculation mode"));
         goto endjob;
     }
 
