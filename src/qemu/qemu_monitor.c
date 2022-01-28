@@ -4532,13 +4532,14 @@ qemuMonitorTransactionBackup(virJSONValue *actions,
 
 int
 qemuMonitorStartDirtyRateCalc(qemuMonitor *mon,
-                              int seconds)
+                              int seconds,
+                              virDomainDirtyRateCalcMode mode)
 {
     VIR_DEBUG("seconds=%d", seconds);
 
     QEMU_CHECK_MONITOR(mon);
 
-    return qemuMonitorJSONStartDirtyRateCalc(mon, seconds);
+    return qemuMonitorJSONStartDirtyRateCalc(mon, seconds, mode);
 }
 
 

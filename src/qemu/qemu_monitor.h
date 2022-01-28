@@ -1553,7 +1553,8 @@ qemuMonitorTransactionBackup(virJSONValue *actions,
 
 int
 qemuMonitorStartDirtyRateCalc(qemuMonitor *mon,
-                              int seconds);
+                              int seconds,
+                              virDomainDirtyRateCalcMode mode);
 
 typedef struct _qemuMonitorDirtyRateInfo qemuMonitorDirtyRateInfo;
 struct _qemuMonitorDirtyRateInfo {

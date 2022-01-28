@@ -8695,18 +8695,31 @@ qemuMonitorJSONGetCPUMigratable(qemuMonitor *mon,
                                   migratable);
 }
 
+VIR_ENUM_DECL(virDomainDirtyRateCalcMode);
+VIR_ENUM_IMPL(virDomainDirtyRateCalcMode,
+              VIR_DOMAIN_DIRTYRATE_CALC_MODE_LAST,
+              "page-sampling",
+              "dirty-bitmap",
+              "dirty-ring");
 
 int
 qemuMonitorJSONStartDirtyRateCalc(qemuMonitor *mon,
-                                  int seconds)
+                                  int seconds,
+                                  virDomainDirtyRateCalcMode mode)
 {
     g_autoptr(virJSONValue) cmd = NULL;
     g_autoptr(virJSONValue) reply = NULL;
+    const char *modestr = NULL;
+
+    if (mode != VIR_DOMAIN_DIRTYRATE_CALC_MODE_PAGE_SAMPLING)
+       modestr = virDomainDirtyRateCalcModeTypeToString(mode);
 
     if (!(cmd = qemuMonitorJSONMakeCommand("calc-dirty-rate",
                                            "i:calc-time", seconds,
-                                           NULL)))
+                                           "S:mode", modestr,
+                                           NULL))) {
         return -1;
+    }
 
     if (qemuMonitorJSONCommand(mon, cmd, &reply) < 0)
         return -1;
