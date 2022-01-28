@@ -1150,3 +1150,20 @@ virshDomainNumatuneModeCompleter(vshControl *ctl G_GNUC_UNUSED,
 
     return ret;
 }
+
+
+char **
+virshDomainDirtyRateCalcModeCompleter(vshControl *ctl,
+                                      const vshCmd *cmd,
+                                      unsigned int flags)
+{
+    const char *modes[] = {"page-sampling", "dirty-bitmap", "dirty-ring", NULL};
+    const char *mode = NULL;
+
+    virCheckFlags(0, NULL);
+
+    if (vshCommandOptStringQuiet(ctl, cmd, "mode", &mode) < 0)
+        return NULL;
+
+    return virshCommaStringListComplete(mode, modes);
+}
