@@ -11947,8 +11947,8 @@ virConnectGetDomainCapabilities(virConnectPtr conn,
  *     this format:
  *
  *     "dirtyrate.calc_status" - the status of last memory dirty rate calculation,
- *                               returned as int from virDomainDirtyRateStatus
- *                               enum.
+ *                               either of these 3 'unstarted,measuring,measured'
+ *                               values returned.
  *     "dirtyrate.calc_start_time" - the start time of last memory dirty rate
  *                                   calculation as long long.
  *     "dirtyrate.calc_period" - the period of last memory dirty rate calculation

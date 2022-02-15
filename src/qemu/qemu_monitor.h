@@ -1538,10 +1538,24 @@ int
 qemuMonitorStartDirtyRateCalc(qemuMonitor *mon,
                               int seconds);
 
+/**
+ * qemuMonitorDirtyRateStatus:
+ *
+ * Details on the cause of a dirty page rate calculation status.
+ */
+typedef enum {
+    QEMU_MONITOR_DIRTYRATE_STATUS_UNSTARTED = 0, /* the dirtyrate calculation has
+                                                    not been started */
+    QEMU_MONITOR_DIRTYRATE_STATUS_MEASURING,    /* the dirtyrate calculation is
+                                                   measuring */
+    QEMU_MONITOR_DIRTYRATE_STATUS_MEASURED,     /* the dirtyrate calculation is
+                                                   completed */
+    QEMU_MONITOR_DIRTYRATE_STATUS_LAST,
+} qemuMonitorDirtyRateStatus;
+
 typedef struct _qemuMonitorDirtyRateInfo qemuMonitorDirtyRateInfo;
 struct _qemuMonitorDirtyRateInfo {
-    int status;             /* the status of last dirtyrate calculation,
-                               one of virDomainDirtyRateStatus */
+    qemuMonitorDirtyRateStatus status;  /* the status of last dirtyrate calculation */
     int calcTime;           /* the period of dirtyrate calculation */
     long long startTime;    /* the start time of dirtyrate calculation */
     long long dirtyRate;    /* the dirtyrate in MiB/s */

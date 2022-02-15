@@ -8764,7 +8764,7 @@ qemuMonitorJSONStartDirtyRateCalc(qemuMonitor *mon,
 
 VIR_ENUM_DECL(qemuMonitorDirtyRateStatus);
 VIR_ENUM_IMPL(qemuMonitorDirtyRateStatus,
-              VIR_DOMAIN_DIRTYRATE_LAST,
+              QEMU_MONITOR_DIRTYRATE_STATUS_LAST,
               "unstarted",
               "measuring",
               "measured");
@@ -8792,7 +8792,7 @@ qemuMonitorJSONExtractDirtyRateInfo(virJSONValue *data,
     /* `query-dirty-rate` replies `dirty-rate` data only if the status of the latest
      * calculation is `measured`.
      */
-    if ((info->status == VIR_DOMAIN_DIRTYRATE_MEASURED) &&
+    if ((info->status == QEMU_MONITOR_DIRTYRATE_STATUS_MEASURED) &&
         (virJSONValueObjectGetNumberLong(data, "dirty-rate", &info->dirtyRate) < 0)) {
         virReportError(VIR_ERR_INTERNAL_ERROR, "%s",
                        _("query-dirty-rate reply was missing 'dirty-rate' data"));

@@ -18525,6 +18525,8 @@ qemuDomainGetStatsDirtyRateMon(virQEMUDriver *driver,
     return ret;
 }
 
+VIR_ENUM_DECL(qemuMonitorDirtyRateStatus);
+
 static int
 qemuDomainGetStatsDirtyRate(virQEMUDriver *driver,
                             virDomainObj *dom,
@@ -18539,8 +18541,9 @@ qemuDomainGetStatsDirtyRate(virQEMUDriver *driver,
     if (qemuDomainGetStatsDirtyRateMon(driver, dom, &info) < 0)
         return -1;
 
-    if (virTypedParamListAddInt(params, info.status,
-                                "dirtyrate.calc_status") < 0)
+    if (virTypedParamListAddString(params,
+                                   qemuMonitorDirtyRateStatusTypeToString(info.status),
+                                   "dirtyrate.calc_status") < 0)
         return -1;
 
     if (virTypedParamListAddLLong(params, info.startTime,
@@ -18551,7 +18554,7 @@ qemuDomainGetStatsDirtyRate(virQEMUDriver *driver,
                                 "dirtyrate.calc_period") < 0)
         return -1;
 
-    if ((info.status == VIR_DOMAIN_DIRTYRATE_MEASURED) &&
+    if ((info.status == QEMU_MONITOR_DIRTYRATE_STATUS_MEASURED) &&
         virTypedParamListAddLLong(params, info.dirtyRate,
                                   "dirtyrate.megabytes_per_second") < 0)
         return -1;
