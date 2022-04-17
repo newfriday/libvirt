@@ -2745,6 +2745,17 @@ qemuMigrationDstPrepareAnyBlockDirtyBitmaps(virDomainObj *vm,
     return 0;
 }
 
+static bool
+qemuMigrationJobRunning(virDomainObj *vm,
+                        virDomainAsyncJob job)
+{
+    qemuDomainObjPrivate *priv = vm->privateData;
+
+    return (virDomainObjIsActive(vm) &&
+            VIR_ASYNC_JOB_NONE != job &&
+            priv->job.asyncJob == job &&
+            priv->job.current->status == VIR_DOMAIN_JOB_STATUS_MIGRATING);
+}
 
 static int
 qemuMigrationDstPrepareAny(virQEMUDriver *driver,
@@ -2895,6 +2906,20 @@ qemuMigrationDstPrepareAny(virQEMUDriver *driver,
                                          QEMU_MIGRATION_COOKIE_CAPS |
                                          QEMU_MIGRATION_COOKIE_BLOCK_DIRTY_BITMAPS)))
         goto cleanup;
+
+retry:
+    if ((vm = virDomainObjListFindByUUID(driver->domains, (*def)->uuid))) {
+        /* VM already exists, check if job VIR_ASYNC_JOB_MIGRATION_OUT
+         * is running, wait for completion if so. */
+        if (qemuMigrationJobRunning(vm, VIR_ASYNC_JOB_MIGRATION_OUT)) {
+            if (virDomainObjWait(vm) < 0)
+                goto cleanup;
+        }
+
+        virDomainObjEndAPI(&vm);
+        vm = NULL;
+        goto retry;
+    }
 
     if (!(vm = virDomainObjListAdd(driver->domains, def,
                                    driver->xmlopt,
