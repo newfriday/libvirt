@@ -204,6 +204,7 @@
   <flag name='rbd-encryption-luks-any'/>
   <flag name='qcow2-discard-no-unref'/>
   <flag name='run-with.async-teardown'/>
+  <flag name='set-vcpu-dirty-limit'/>
   <version>8000050</version>
   <microcodeVersion>43100245</microcodeVersion>
   <package>v8.0.0-2835-g361d539735</package>
