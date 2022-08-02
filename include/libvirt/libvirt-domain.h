@@ -6506,4 +6506,20 @@ int virDomainFDAssociate(virDomainPtr domain,
                          int *fds,
                          unsigned int flags);
 
+/**
+ * virDomainDirtyLimitFlags:
+ *
+ * Since: 9.6.0
+ */
+typedef enum {
+    VIR_DOMAIN_DIRTYLIMIT_VCPU = 1 << 0,/* render specified virtual CPU for
+                                           dirty page rate upper limit (Since: 9.6.0) */
+    VIR_DOMAIN_DIRTYLIMIT_ALL = 1 << 1, /* render all virtual CPU for dirty
+                                           page rate upper limit (Since: 9.6.0) */
+} virDomainDirtyLimitFlags;
+
+int virDomainSetVcpuDirtyLimit(virDomainPtr domain,
+                               int vcpu,
+                               unsigned long long rate,
+                               unsigned int flags);
 #endif /* LIBVIRT_DOMAIN_H */
