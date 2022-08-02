@@ -697,6 +697,7 @@ VIR_ENUM_IMPL(virQEMUCaps,
 
               /* 450 */
               "run-with.async-teardown", /* QEMU_CAPS_RUN_WITH_ASYNC_TEARDOWN */
+              "set-vcpu-dirty-limit", /* QEMU_CAPS_VCPU_DIRTY_LIMIT */
     );
 
 
@@ -1220,6 +1221,7 @@ struct virQEMUCapsStringFlags virQEMUCapsCommands[] = {
     { "calc-dirty-rate", QEMU_CAPS_CALC_DIRTY_RATE },
     { "query-stats", QEMU_CAPS_QUERY_STATS },
     { "query-stats-schemas", QEMU_CAPS_QUERY_STATS_SCHEMAS },
+    { "set-vcpu-dirty-limit", QEMU_CAPS_VCPU_DIRTY_LIMIT },
 };
 
 struct virQEMUCapsStringFlags virQEMUCapsMigration[] = {
