@@ -934,6 +934,7 @@ LIBVIRT_9.0.0 {
 
 LIBVIRT_9.7.0 {
     global:
+        virDomainSetVcpuDirtyLimit;
         virNetworkGetMetadata;
         virNetworkSetMetadata;
 } LIBVIRT_9.0.0;

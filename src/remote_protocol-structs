@@ -3290,6 +3290,12 @@ struct remote_domain_fd_associate_args {
         remote_nonnull_string      name;
         u_int                      flags;
 };
+struct remote_domain_set_vcpu_dirty_limit_args {
+        remote_nonnull_domain      dom;
+        int                        vcpu;
+        uint64_t                   rate;
+        u_int                      flags;
+};
 enum remote_procedure {
         REMOTE_PROC_CONNECT_OPEN = 1,
         REMOTE_PROC_CONNECT_CLOSE = 2,
@@ -3736,4 +3742,5 @@ enum remote_procedure {
         REMOTE_PROC_DOMAIN_FD_ASSOCIATE = 443,
         REMOTE_PROC_NETWORK_SET_METADATA = 444,
         REMOTE_PROC_NETWORK_GET_METADATA = 445,
+        REMOTE_PROC_DOMAIN_SET_VCPU_DIRTY_LIMIT = 446,
 };

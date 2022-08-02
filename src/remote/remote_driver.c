@@ -8110,6 +8110,7 @@ static virHypervisorDriver hypervisor_driver = {
     .domainStartDirtyRateCalc = remoteDomainStartDirtyRateCalc, /* 7.2.0 */
     .domainSetLaunchSecurityState = remoteDomainSetLaunchSecurityState, /* 8.0.0 */
     .domainFDAssociate = remoteDomainFDAssociate, /* 9.0.0 */
+    .domainSetVcpuDirtyLimit = remoteDomainSetVcpuDirtyLimit, /* 9.7.0 */
 };
 
 static virNetworkDriver network_driver = {
