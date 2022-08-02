@@ -1441,6 +1441,12 @@ typedef int
                                   int seconds,
                                   unsigned int flags);
 
+typedef int
+(*virDrvDomainSetVcpuDirtyLimit)(virDomainPtr domain,
+                                 unsigned int vcpu,
+                                 unsigned long long rate,
+                                 virDomainSetVcpuDirtyLimitAction action);
+
 typedef struct _virHypervisorDriver virHypervisorDriver;
 
 /**
@@ -1712,4 +1718,5 @@ struct _virHypervisorDriver {
     virDrvDomainAuthorizedSSHKeysSet domainAuthorizedSSHKeysSet;
     virDrvDomainGetMessages domainGetMessages;
     virDrvDomainStartDirtyRateCalc domainStartDirtyRateCalc;
+    virDrvDomainSetVcpuDirtyLimit domainSetVcpuDirtyLimit;
 };

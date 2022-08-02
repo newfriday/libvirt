@@ -13929,3 +13929,50 @@ virDomainStartDirtyRateCalc(virDomainPtr domain,
     virDispatchError(conn);
     return -1;
 }
+
+/**
+ * virDomainSetVcpuDirtyLimit:
+ * @domain: pointer to domain object, or NULL for Domain0
+ * @vcpu: virtual CPU number
+ * @rate: upper limit of dirty page rate (MB/s) for virtual CPUs
+ * @action: must be a value from virDomainSetVcpuDirtyLimitAction
+ *
+ * Dynamically set the upper dirty page rate limit of the virtual CPUs.
+ *
+ * Returns 0 in case of success, -1 in case of failure.
+ *
+ * Since: 8.7.0
+ */
+int
+virDomainSetVcpuDirtyLimit(virDomainPtr domain,
+                           unsigned int vcpu,
+                           unsigned long long rate,
+                           virDomainSetVcpuDirtyLimitAction action)
+{
+    virConnectPtr conn;
+
+    VIR_DOMAIN_DEBUG(domain, "vcpu=%u, dirty page rate limit=%lld",
+                     vcpu, rate);
+
+    virResetLastError();
+
+    virCheckDomainReturn(domain, -1);
+    conn = domain->conn;
+
+    virCheckReadOnlyGoto(conn->flags, error);
+    virCheckPositiveArgGoto(rate, error);
+
+    if (conn->driver->domainSetVcpuDirtyLimit) {
+        int ret;
+        ret = conn->driver->domainSetVcpuDirtyLimit(domain, vcpu, rate, action);
+        if (ret < 0)
+            goto error;
+        return ret;
+    }
+
+    virReportUnsupportedError();
+
+ error:
+    virDispatchError(domain->conn);
+    return -1;
+}

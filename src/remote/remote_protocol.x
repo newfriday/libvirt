@@ -3921,12 +3921,18 @@ struct remote_domain_start_dirty_rate_calc_args {
     unsigned int flags;
 };
 
-
 struct remote_domain_event_memory_device_size_change_msg {
     int callbackID;
     remote_nonnull_domain dom;
     remote_nonnull_string alias;
     unsigned hyper size;
+};
+
+struct remote_domain_set_vcpu_dirty_limit_args {
+    remote_nonnull_domain dom;
+    unsigned int vcpu;
+    unsigned hyper rate;
+    unsigned int action;
 };
 
 /*----- Protocol. -----*/
@@ -6959,5 +6965,11 @@ enum remote_procedure {
      * @generate: both
      * @acl: domain:write
      */
-    REMOTE_PROC_DOMAIN_ABORT_JOB_FLAGS = 442
+    REMOTE_PROC_DOMAIN_ABORT_JOB_FLAGS = 442,
+
+    /**
+     * @generate: both
+     * @acl: domain:write
+     */
+    REMOTE_PROC_DOMAIN_SET_VCPU_DIRTY_LIMIT = 443
 };

@@ -6452,4 +6452,19 @@ int virDomainStartDirtyRateCalc(virDomainPtr domain,
                                 int seconds,
                                 unsigned int flags);
 
+/**
+ * virDomainSetVcpuDirtyLimitAction:
+ *
+ * Since: 8.7.0
+ */
+typedef enum {
+    VIR_DOMAIN_SET_VCPU_DIRTY_LIMIT = 0,        /* set vcpu dirty page rage limit (Since: 8.7.0) */
+    VIR_DOMAIN_SET_VCPU_DIRTY_LIMIT_ALL = 1,    /* set all vcpus dirtyrate page limit of vm (Since: 8.7.0) */
+} virDomainSetVcpuDirtyLimitAction;
+
+int virDomainSetVcpuDirtyLimit(virDomainPtr domain,
+                               unsigned int vcpu,
+                               unsigned long long rate,
+                               virDomainSetVcpuDirtyLimitAction action);
+
 #endif /* LIBVIRT_DOMAIN_H */
