@@ -1579,3 +1579,8 @@ qemuMonitorExtractQueryStats(virJSONValue *info);
 virJSONValue *
 qemuMonitorGetStatsByQOMPath(virJSONValue *arr,
                              char *qom_path);
+
+int
+qemuMonitorSetVcpuDirtyLimit(qemuMonitor *mon,
+                             int vcpu,
+                             unsigned long long rate);

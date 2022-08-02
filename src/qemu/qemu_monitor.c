@@ -4501,3 +4501,16 @@ qemuMonitorGetStatsByQOMPath(virJSONValue *arr,
 
     return NULL;
 }
+
+
+int
+qemuMonitorSetVcpuDirtyLimit(qemuMonitor *mon,
+                             int vcpu,
+                             unsigned long long rate)
+{
+    VIR_DEBUG("set vcpu %d dirty page rate limit %llu", vcpu, rate);
+
+    QEMU_CHECK_MONITOR(mon);
+
+    return qemuMonitorJSONSetVcpuDirtyLimit(mon, vcpu, rate);
+}
