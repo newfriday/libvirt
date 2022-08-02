@@ -6506,4 +6506,8 @@ int virDomainFDAssociate(virDomainPtr domain,
                          int *fds,
                          unsigned int flags);
 
+int virDomainSetVcpuDirtyLimit(virDomainPtr domain,
+                               int vcpu,
+                               unsigned long long rate,
+                               unsigned int flags);
 #endif /* LIBVIRT_DOMAIN_H */

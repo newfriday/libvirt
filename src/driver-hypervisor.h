@@ -1448,6 +1448,12 @@ typedef int
                            int *fds,
                            unsigned int flags);
 
+typedef int
+(*virDrvDomainSetVcpuDirtyLimit)(virDomainPtr domain,
+                                 int vcpu,
+                                 unsigned long long rate,
+                                 unsigned int flags);
+
 typedef struct _virHypervisorDriver virHypervisorDriver;
 
 /**
@@ -1720,4 +1726,5 @@ struct _virHypervisorDriver {
     virDrvDomainGetMessages domainGetMessages;
     virDrvDomainStartDirtyRateCalc domainStartDirtyRateCalc;
     virDrvDomainFDAssociate domainFDAssociate;
+    virDrvDomainSetVcpuDirtyLimit domainSetVcpuDirtyLimit;
 };

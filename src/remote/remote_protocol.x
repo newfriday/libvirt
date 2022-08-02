@@ -3935,6 +3935,14 @@ struct remote_domain_fd_associate_args {
     remote_nonnull_string name;
     unsigned int flags;
 };
+
+struct remote_domain_set_vcpu_dirty_limit_args {
+    remote_nonnull_domain dom;
+    int vcpu;
+    unsigned hyper rate;
+    unsigned int flags;
+};
+
 /*----- Protocol. -----*/
 
 /* Define the program number, protocol version and procedure numbers here. */
@@ -6974,5 +6982,12 @@ enum remote_procedure {
      * @generate: none
      * @acl: domain:write
      */
-    REMOTE_PROC_DOMAIN_FD_ASSOCIATE = 443
+    REMOTE_PROC_DOMAIN_FD_ASSOCIATE = 443,
+    /**
+     * @generate: both
+     * @acl: domain:write
+     * @acl: domain:save:!VIR_DOMAIN_AFFECT_CONFIG|VIR_DOMAIN_AFFECT_LIVE
+     * @acl: domain:save:VIR_DOMAIN_AFFECT_CONFIG
+     */
+    REMOTE_PROC_DOMAIN_SET_VCPU_DIRTY_LIMIT = 444
 };

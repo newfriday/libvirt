@@ -932,4 +932,9 @@ LIBVIRT_9.0.0 {
         virDomainFDAssociate;
 } LIBVIRT_8.5.0;
 
+LIBVIRT_9.6.0 {
+    global:
+        virDomainSetVcpuDirtyLimit;
+} LIBVIRT_9.0.0;
+
 # .... define new API here using predicted next version number ....

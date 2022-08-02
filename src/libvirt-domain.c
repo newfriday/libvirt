@@ -14059,3 +14059,62 @@ virDomainFDAssociate(virDomainPtr domain,
     virDispatchError(conn);
     return -1;
 }
+
+/**
+ * virDomainSetVcpuDirtyLimit:
+ * @domain: pointer to domain object
+ * @vcpu: index of the limited virtual CPU
+ * @rate: upper limit of dirty page rate (mebibyte/s) for virtual CPUs
+ * @flags: bitwise-OR of virDomainModificationImpact
+ *
+ * Dynamically set the dirty page rate upper limit for the virtual CPUs.
+ *
+ * @vcpu may be a positive value, zero, or equal to -1. If -1 is set,
+ * the change affects all virtual CPUs of VM; it affects the specified
+ * virtual CPU otherwise.
+ * @rate may be 0 to cancel the limit or a positive value to enable. The
+ * hypervisors are free to round it down to the nearest mebibyte/s.
+ *
+ * The API will throttle the virtual CPU as needed to keep their dirty
+ * page rate within the limit set by @rate. Since it just throttles the
+ * virtual CPU, which dirties memory, read processes in the guest OS
+ * aren't penalized. This could, in some scenes, be used to provide
+ * quality-of-service in the aspect of the memory workload for virtual
+ * CPUs.
+ *
+ * Returns 0 in case of success, -1 in case of failure.
+ *
+ * Since: 9.6.0
+ */
+int
+virDomainSetVcpuDirtyLimit(virDomainPtr domain,
+                           int vcpu,
+                           unsigned long long rate,
+                           unsigned int flags)
+{
+    virConnectPtr conn;
+
+    VIR_DOMAIN_DEBUG(domain, "vcpu=%d, rate=%llu, flags=0x%x",
+                     vcpu, rate, flags);
+
+    virResetLastError();
+
+    virCheckDomainReturn(domain, -1);
+    conn = domain->conn;
+
+    virCheckReadOnlyGoto(conn->flags, error);
+
+    if (conn->driver->domainSetVcpuDirtyLimit) {
+        int ret;
+        ret = conn->driver->domainSetVcpuDirtyLimit(domain, vcpu, rate, flags);
+        if (ret < 0)
+            goto error;
+        return ret;
+    }
+
+    virReportUnsupportedError();
+
+ error:
+    virDispatchError(domain->conn);
+    return -1;
+}
