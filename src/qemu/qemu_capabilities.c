@@ -673,6 +673,9 @@ VIR_ENUM_IMPL(virQEMUCaps,
               "iothread.thread-pool-max", /* QEMU_CAPS_IOTHREAD_THREAD_POOL_MAX */
               "usb-host.guest-resets-all", /* QEMU_CAPS_USB_HOST_GUESTS_RESETS_ALL */
               "migration.blocked-reasons", /* QEMU_CAPS_MIGRATION_BLOCKED_REASONS */
+
+              /* 435 */
+              "set-vcpu-dirty-limit", /* QEMU_CAPS_VCPU_DIRTY_LIMIT*/
     );
 
 
@@ -1227,6 +1230,7 @@ struct virQEMUCapsStringFlags virQEMUCapsCommands[] = {
     { "query-dirty-rate", QEMU_CAPS_QUERY_DIRTY_RATE },
     { "sev-inject-launch-secret", QEMU_CAPS_SEV_INJECT_LAUNCH_SECRET },
     { "calc-dirty-rate", QEMU_CAPS_CALC_DIRTY_RATE },
+    { "set-vcpu-dirty-limit", QEMU_CAPS_VCPU_DIRTY_LIMIT },
 };
 
 struct virQEMUCapsStringFlags virQEMUCapsMigration[] = {
