@@ -8889,3 +8889,48 @@ qemuMonitorJSONQueryStats(qemuMonitor *mon,
 
     return virJSONValueObjectStealArray(reply, "return");
 }
+
+/**
+ * qemuMonitorJSONSetVcpuDirtyLimit:
+ * @mon: monitor object
+ * @vcpu: virtual cpu index to be set, -1 means all virtual cpus
+ * @rate: dirty page rate upper limit to be set
+ *
+ * Returns -1 on failure.
+ */
+int
+qemuMonitorJSONSetVcpuDirtyLimit(qemuMonitor *mon,
+                                 int vcpu,
+                                 unsigned long long rate)
+{
+    g_autoptr(virJSONValue) cmd = NULL;
+    g_autoptr(virJSONValue) reply = NULL;
+
+    if (vcpu < -1)
+        return -1;
+
+    if (vcpu >= 0) {
+        /* set vcpu dirty page rate limit */
+        if (!(cmd = qemuMonitorJSONMakeCommand("set-vcpu-dirty-limit",
+                                               "i:cpu-index", vcpu,
+                                               "U:dirty-rate", rate,
+                                               NULL))) {
+            return -1;
+        }
+    } else if (vcpu == -1) {
+        /* set vm dirty page rate limit */
+         if (!(cmd = qemuMonitorJSONMakeCommand("set-vcpu-dirty-limit",
+                                               "U:dirty-rate", rate,
+                                               NULL))) {
+            return -1;
+        }
+    }
+
+    if (qemuMonitorJSONCommand(mon, cmd, &reply) < 0)
+        return -1;
+
+    if (qemuMonitorJSONCheckError(cmd, reply) < 0)
+        return -1;
+
+    return 0;
+}

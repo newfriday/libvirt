@@ -19912,6 +19912,57 @@ qemuDomainFDAssociate(virDomainPtr domain,
     return ret;
 }
 
+static int
+qemuDomainSetVcpuDirtyLimit(virDomainPtr domain,
+                            int vcpu,
+                            unsigned long long rate,
+                            unsigned int flags)
+{
+    virDomainObj *vm = NULL;
+    qemuDomainObjPrivate *priv;
+    int ret = -1;
+
+    if (!(vm = qemuDomainObjFromDomain(domain)))
+        return -1;
+
+    if (virDomainSetVcpuDirtyLimitEnsureACL(domain->conn, vm->def))
+        goto cleanup;
+
+    priv = vm->privateData;
+    if (!virQEMUCapsGet(priv->qemuCaps, QEMU_CAPS_VCPU_DIRTY_LIMIT)) {
+        virReportError(VIR_ERR_OPERATION_UNSUPPORTED, "%s",
+                       _("QEMU does not support setting dirty page rate limit"));
+        goto cleanup;
+    }
+
+    if (virDomainObjBeginJob(vm, VIR_JOB_MODIFY) < 0)
+        goto cleanup;
+
+    if (virDomainObjCheckActive(vm) < 0)
+        goto endjob;
+
+    qemuDomainObjEnterMonitor(vm);
+    if (flags & VIR_DOMAIN_DIRTYLIMIT_VCPU) {
+        if (vcpu < 0) {
+           virReportError(VIR_ERR_OPERATION_UNSUPPORTED, "%s",
+                          _("Require cpu index to limit dirty page rate"));
+           goto endjob;
+        }
+        ret = qemuMonitorSetVcpuDirtyLimit(priv->mon, vcpu, rate);
+        VIR_DEBUG("Set vcpu[%d] dirty page rate limit %lld", vcpu, rate);
+    } else {
+        ret = qemuMonitorSetVcpuDirtyLimit(priv->mon, -1, rate);
+        VIR_DEBUG("Set all vcpus dirty page rate limit %lld of vm", rate);
+    }
+    qemuDomainObjExitMonitor(vm);
+
+ endjob:
+    virDomainObjEndJob(vm);
+
+ cleanup:
+    virDomainObjEndAPI(&vm);
+    return ret;
+}
 
 static virHypervisorDriver qemuHypervisorDriver = {
     .name = QEMU_DRIVER_NAME,
@@ -20162,6 +20213,7 @@ static virHypervisorDriver qemuHypervisorDriver = {
     .domainStartDirtyRateCalc = qemuDomainStartDirtyRateCalc, /* 7.2.0 */
     .domainSetLaunchSecurityState = qemuDomainSetLaunchSecurityState, /* 8.0.0 */
     .domainFDAssociate = qemuDomainFDAssociate, /* 9.0.0 */
+    .domainSetVcpuDirtyLimit = qemuDomainSetVcpuDirtyLimit, /* 9.6.0 */
 };
 
 
