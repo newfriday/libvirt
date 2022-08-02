@@ -4515,3 +4515,16 @@ qemuMonitorGetMigrationBlockers(qemuMonitor *mon,
 
     return qemuMonitorJSONGetMigrationBlockers(mon, blockers);
 }
+
+int
+qemuMonitorSetVcpuDirtyLimit(qemuMonitor *mon,
+                             int vcpu,
+                             unsigned long long rate,
+                             bool vm)
+{
+    VIR_DEBUG("set vcpu %d dirty page rate limit %lld", vcpu, rate);
+
+    QEMU_CHECK_MONITOR(mon);
+
+    return qemuMonitorJSONSetVcpuDirtyLimit(mon, vcpu, rate, vm);
+}
