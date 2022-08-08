@@ -8129,6 +8129,7 @@ static virHypervisorDriver hypervisor_driver = {
     .domainSetLaunchSecurityState = remoteDomainSetLaunchSecurityState, /* 8.0.0 */
     .domainFDAssociate = remoteDomainFDAssociate, /* 9.0.0 */
     .domainSetVcpuDirtyLimit = remoteDomainSetVcpuDirtyLimit, /* 9.6.0 */
+    .domainCancelVcpuDirtyLimit = remoteDomainCancelVcpuDirtyLimit, /* 9.6.0 */
 };
 
 static virNetworkDriver network_driver = {

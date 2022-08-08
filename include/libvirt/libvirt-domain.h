@@ -6524,4 +6524,8 @@ int virDomainSetVcpuDirtyLimit(virDomainPtr domain,
                                int vcpu,
                                unsigned long long rate,
                                unsigned int flags);
+
+int virDomainCancelVcpuDirtyLimit(virDomainPtr domain,
+                                  int vcpu,
+                                  unsigned int flags);
 #endif /* LIBVIRT_DOMAIN_H */

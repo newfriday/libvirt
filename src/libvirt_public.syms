@@ -935,6 +935,7 @@ LIBVIRT_9.0.0 {
 LIBVIRT_9.6.0 {
     global:
         virDomainSetVcpuDirtyLimit;
+        virDomainCancelVcpuDirtyLimit;
 } LIBVIRT_9.0.0;
 
 # .... define new API here using predicted next version number ....

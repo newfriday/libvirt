@@ -3945,6 +3945,12 @@ struct remote_domain_set_vcpu_dirty_limit_args {
     unsigned int flags;
 };
 
+struct remote_domain_cancel_vcpu_dirty_limit_args {
+    remote_nonnull_domain dom;
+    int vcpu;
+    unsigned int flags;
+};
+
 /*----- Protocol. -----*/
 
 /* Define the program number, protocol version and procedure numbers here. */
@@ -6989,5 +6995,10 @@ enum remote_procedure {
      * @generate: both
      * @acl: domain:write
      */
-    REMOTE_PROC_DOMAIN_SET_VCPU_DIRTY_LIMIT = 444
+    REMOTE_PROC_DOMAIN_SET_VCPU_DIRTY_LIMIT = 444,
+    /**
+     * @generate: both
+     * @acl: domain:write
+     */
+    REMOTE_PROC_DOMAIN_CANCEL_VCPU_DIRTY_LIMIT = 445
 };
