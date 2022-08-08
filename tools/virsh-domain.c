@@ -13812,6 +13812,109 @@ cmdDomDirtyRateCalc(vshControl *ctl, const vshCmd *cmd)
     return true;
 }
 
+/*
+ * "limit-dirty-page-rate" command
+ */
+static const vshCmdInfo info_limit_dirty_page_rate[] = {
+    {.name = "help",
+     .data = N_("Set or cancel dirty page rate upper limit")
+    },
+    {.name = "desc",
+     .data = N_("Set or cancel dirty page rate upper limit, "
+                "require dirty-ring size configured")
+    },
+    {.name = NULL}
+};
+
+static const vshCmdOptDef opts_limit_dirty_page_rate[] = {
+    VIRSH_COMMON_OPT_DOMAIN_FULL(0),
+    {.name = "rate",
+     .type = VSH_OT_INT,
+     .flags = VSH_OFLAG_REQ,
+     .help = N_("Upper limit of dirty page rate (MB/s) for "
+                "virtual CPUs, use 0 to cancel")
+    },
+    {.name = "vcpu",
+     .type = VSH_OT_INT,
+     .help = N_("Index of a virtual CPU")
+    },
+    VIRSH_COMMON_OPT_DOMAIN_PERSISTENT,
+    VIRSH_COMMON_OPT_DOMAIN_CONFIG,
+    VIRSH_COMMON_OPT_DOMAIN_LIVE,
+    VIRSH_COMMON_OPT_DOMAIN_CURRENT,
+    {.name = NULL}
+};
+
+static bool
+cmdLimitDirtyPageRate(vshControl *ctl, const vshCmd *cmd)
+{
+    g_autoptr(virshDomain) dom = NULL;
+    int vcpu_idx = -1;
+    unsigned long long rate = 0;
+    unsigned int flags = VIR_DOMAIN_AFFECT_CURRENT;
+    bool vcpu = vshCommandOptBool(cmd, "vcpu");
+    bool current = vshCommandOptBool(cmd, "current");
+    bool config = vshCommandOptBool(cmd, "config");
+    bool live = vshCommandOptBool(cmd, "live");
+
+    VSH_EXCLUSIVE_OPTIONS_VAR(current, live);
+    VSH_EXCLUSIVE_OPTIONS_VAR(current, config);
+
+    if (config)
+        flags |= VIR_DOMAIN_AFFECT_CONFIG;
+    if (live)
+        flags |= VIR_DOMAIN_AFFECT_LIVE;
+
+    if (!(dom = virshCommandOptDomain(ctl, cmd, NULL)))
+        return false;
+
+    if (vshCommandOptULongLong(ctl, cmd, "rate", &rate) < 0)
+        return false;
+
+    if (vcpu) {
+        if (vshCommandOptInt(ctl, cmd, "vcpu", &vcpu_idx) < 0)
+            return false;
+
+        if (vcpu_idx < 0) {
+            vshError(ctl, "%s", _("Invalid vcpu index, using --vcpu "
+                                  "to specify cpu index"));
+            return false;
+        }
+    }
+
+    if (vcpu) {
+        /* Set the dirty page rate upper limit for the specified
+         * virtual CPU in the given VM; cancel it if rate is set
+         * to zero.
+         */
+        if (virDomainSetVcpuDirtyLimit(dom, vcpu_idx,
+                rate, flags) < 0)
+            return false;
+        if (rate == 0)
+            vshPrintExtra(ctl, _("Cancel vcpu[%1$d] dirty page rate upper "
+                                 "limit successfully\n"),
+                                 vcpu_idx);
+        else
+            vshPrintExtra(ctl, _("Set vcpu[%1$d] dirty page rate upper "
+                                 "limit %2$lld(MB/s) successfully\n"),
+                                 vcpu_idx, rate);
+    } else {
+        /* Set all dirty page rate upper limits for virtual CPUs in
+         * the given VM; cancel it if the rate is set to zero.
+         */
+        if (virDomainSetVcpuDirtyLimit(dom, -1, rate, flags) < 0)
+            return false;
+        if (rate == 0)
+            vshPrintExtra(ctl, "%s", _("Cancel dirty page rate limit for "
+                                       "all virtual CPUs successfully\n"));
+        else
+            vshPrintExtra(ctl, _("Set dirty page rate limit %1$lld(MB/s) "
+                                 "for all virtual CPUs successfully\n"),
+                                 rate);
+    }
+
+    return true;
+}
 
 const vshCmdDef domManagementCmds[] = {
     {.name = "attach-device",
@@ -14474,6 +14577,12 @@ const vshCmdDef domManagementCmds[] = {
      .handler = cmdDomFdAssociate,
      .opts = opts_dom_fd_associate,
      .info = info_dom_fd_associate,
+     .flags = 0
+    },
+    {.name = "limit-dirty-page-rate",
+     .handler = cmdLimitDirtyPageRate,
+     .opts = opts_limit_dirty_page_rate,
+     .info = info_limit_dirty_page_rate,
      .flags = 0
     },
     {.name = NULL}

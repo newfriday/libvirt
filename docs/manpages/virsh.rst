@@ -5273,6 +5273,27 @@ use to avoid keeping them open unnecessarily. Best-effort security label restore
 may be requested by using the *--seclabel-restore* flag.
 
 
+limit-dirty-page-rate
+-----------------
+
+**Syntax:**
+
+::
+
+    limit-dirty-page-rate <domain> --rate <number> [--vcpu <number>]
+
+Set or cancel a domain's dirty page rate upper limit for the given vcpu specified
+by the ``vcpu``; set for all virtual CPUs if ``vcpu`` if not specified and cancel
+the domain's dirty page rate upper limit if ``rate`` is set to zero.
+Set or cancel a domain's dirty page rate upper limit for the given virtual CPU
+specified by ``vcpu``; set for all virtual CPUs if ``vcpu`` is not specified;
+and cancel the domain's dirty page rate upper limit if ``rate`` is set to zero.
+
+CPU will be throttled as needed to keep their dirty page rate within the limit
+if the feature enabled. This could, in some scenes, be used to provide
+quality-of-service in the aspect of the memory workload for virtual CPUs.
+
+
 NODEDEV COMMANDS
 ================
 
