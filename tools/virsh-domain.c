@@ -13829,10 +13829,10 @@ cmdDomDirtyRateCalc(vshControl *ctl, const vshCmd *cmd)
  */
 static const vshCmdInfo info_limit_dirty_page_rate[] = {
     {.name = "help",
-     .data = N_("Set dirty page rate upper limit")
+     .data = N_("Set or cancel dirty page rate upper limit")
     },
     {.name = "desc",
-     .data = N_("Set dirty page rate upper limit, "
+     .data = N_("Set or cancel dirty page rate upper limit, "
                 "require dirty-ring size configured")
     },
     {.name = NULL}
@@ -13842,13 +13842,16 @@ static const vshCmdOptDef opts_limit_dirty_page_rate[] = {
     VIRSH_COMMON_OPT_DOMAIN_FULL(0),
     {.name = "rate",
      .type = VSH_OT_INT,
-     .flags = VSH_OFLAG_REQ,
      .help = N_("Upper limit of dirty page rate (MB/s) for "
                 "virtual CPUs")
     },
     {.name = "vcpu",
      .type = VSH_OT_INT,
      .help = N_("Index of a virtual CPU")
+    },
+    {.name = "cancel",
+     .type = VSH_OT_BOOL,
+     .help = N_("Cancel dirty page rate upper limit")
     },
     {.name = NULL}
 };
@@ -13860,7 +13863,10 @@ cmdLimitDirtyPageRate(vshControl *ctl, const vshCmd *cmd)
     int vcpu_idx = -1;
     unsigned long long rate = 0;
     bool vcpu = vshCommandOptBool(cmd, "vcpu");
+    bool cancel = vshCommandOptBool(cmd, "cancel");
     unsigned int flags = 0;
+
+    VSH_EXCLUSIVE_OPTIONS("cancel", "rate");
 
     if (!(dom = virshCommandOptDomain(ctl, cmd, NULL)))
         return false;
@@ -13876,34 +13882,54 @@ cmdLimitDirtyPageRate(vshControl *ctl, const vshCmd *cmd)
         }
     }
 
-    if (vshCommandOptULongLong(ctl, cmd, "rate", &rate) < 0)
-        return false;
-
-    if (!rate) {
-        vshError(ctl, "%s", _("Invalid dirty page rate limit"));
-        return false;
-    }
-
-    if (vcpu) {
-        /* set specified vcpu dirty page rate limit of vm */
-        if (virDomainSetVcpuDirtyLimit(dom, vcpu_idx,
-                rate, flags | VIR_DOMAIN_DIRTYLIMIT_VCPU) < 0)
+    if (!cancel) {
+        if (vshCommandOptULongLong(ctl, cmd, "rate", &rate) < 0)
             return false;
-        g_autofree char *info =
-            g_strdup_printf("Set vcpu[%d] dirty page rate upper "
-                            "limit %lld(MB/s) successfully",
-                            vcpu_idx, rate);
-        vshPrintExtra(ctl, _("%1$s\n"), info);
+
+        if (!rate) {
+            vshError(ctl, "%s", _("Invalid dirty page rate limit"));
+            return false;
+        }
+
+        if (vcpu) {
+            /* set specified vcpu dirty page rate limit of vm */
+            if (virDomainSetVcpuDirtyLimit(dom, vcpu_idx,
+                    rate, flags | VIR_DOMAIN_DIRTYLIMIT_VCPU) < 0)
+                return false;
+            g_autofree char *info =
+                g_strdup_printf("Set vcpu[%d] dirty page rate upper "
+                                "limit %lld(MB/s) successfully",
+                                vcpu_idx, rate);
+            vshPrintExtra(ctl, _("%1$s\n"), info);
+        } else {
+            /* set all vcpu dirty page rate limit of vm */
+            if (virDomainSetVcpuDirtyLimit(dom, IGNORED_CPU_INDEX,
+                    rate, flags | VIR_DOMAIN_DIRTYLIMIT_ALL) < 0)
+                return false;
+            g_autofree char *info =
+                g_strdup_printf("Set dirty page rate limit %lld(MB/s) "
+                                "on all virtual CPUs successfully",
+                                rate);
+            vshPrintExtra(ctl, _("%1$s\n"), info);
+        }
     } else {
-        /* set all vcpu dirty page rate limit of vm */
-        if (virDomainSetVcpuDirtyLimit(dom, IGNORED_CPU_INDEX,
-                rate, flags | VIR_DOMAIN_DIRTYLIMIT_ALL) < 0)
-            return false;
-        g_autofree char *info =
-            g_strdup_printf("Set dirty page rate limit %lld(MB/s) "
-                            "on all virtual CPUs successfully",
-                            rate);
-        vshPrintExtra(ctl, _("%1$s\n"), info);
+        if (vcpu) {
+            /* cancel specified vcpu dirty page rate limit of vm */
+            if (virDomainCancelVcpuDirtyLimit(dom, vcpu_idx,
+                    flags | VIR_DOMAIN_DIRTYLIMIT_VCPU) < 0)
+                return false;
+            g_autofree char *info =
+                g_strdup_printf("Cancel vcpu[%d] dirty page rate limit "
+                                "successfully", vcpu);
+            vshPrintExtra(ctl, _("%1$s\n"), info);
+        } else {
+            /* cancel all vcpu dirty page rate limit of vm */
+            if (virDomainCancelVcpuDirtyLimit(dom, IGNORED_CPU_INDEX,
+                    flags | VIR_DOMAIN_DIRTYLIMIT_ALL) < 0)
+                return false;
+            vshPrintExtra(ctl, "%s", _("Cancel dirty page rate upper "
+                          "limit on all virtual CPUs successfully\n"));
+        }
     }
 
     return true;
