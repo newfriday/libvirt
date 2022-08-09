@@ -20019,6 +20019,52 @@ qemuDomainSetVcpuDirtyLimit(virDomainPtr domain,
     return ret;
 }
 
+static int
+qemuDomainCancelVcpuDirtyLimit(virDomainPtr domain,
+                               int vcpu,
+                               unsigned int flags)
+{
+    virDomainObj *vm = NULL;
+    qemuDomainObjPrivate *priv;
+    int ret = -1;
+
+    if (!(vm = qemuDomainObjFromDomain(domain)))
+        return -1;
+
+    if (virDomainCancelVcpuDirtyLimitEnsureACL(domain->conn, vm->def))
+        goto cleanup;
+
+    priv = vm->privateData;
+    if (!virQEMUCapsGet(priv->qemuCaps, QEMU_CAPS_VCPU_DIRTY_LIMIT)) {
+        virReportError(VIR_ERR_OPERATION_UNSUPPORTED, "%s",
+                       _("QEMU does not support setting vcpu dirty page rate limit"));
+        goto cleanup;
+    }
+
+    if (virDomainObjBeginJob(vm, VIR_JOB_MODIFY) < 0)
+        goto cleanup;
+
+    if (virDomainObjCheckActive(vm) < 0)
+        goto endjob;
+
+    qemuDomainObjEnterMonitor(vm);
+    if (flags & VIR_DOMAIN_DIRTYLIMIT_VCPU) {
+        VIR_DEBUG("Cancel vcpu[%d] dirty page rate limit", vcpu);
+        ret = qemuMonitorCancelVcpuDirtyLimit(priv->mon, vcpu);
+    } else {
+        VIR_DEBUG("Cancel all vcpus dirty page rate limit of vm");
+        ret = qemuMonitorCancelVcpuDirtyLimit(priv->mon, -1);
+    }
+    qemuDomainObjExitMonitor(vm);
+
+ endjob:
+    virDomainObjEndJob(vm);
+
+ cleanup:
+    virDomainObjEndAPI(&vm);
+    return ret;
+}
+
 static virHypervisorDriver qemuHypervisorDriver = {
     .name = QEMU_DRIVER_NAME,
     .connectURIProbe = qemuConnectURIProbe,
@@ -20269,6 +20315,7 @@ static virHypervisorDriver qemuHypervisorDriver = {
     .domainSetLaunchSecurityState = qemuDomainSetLaunchSecurityState, /* 8.0.0 */
     .domainFDAssociate = qemuDomainFDAssociate, /* 9.0.0 */
     .domainSetVcpuDirtyLimit = qemuDomainSetVcpuDirtyLimit, /* 9.6.0 */
+    .domainCancelVcpuDirtyLimit = qemuDomainCancelVcpuDirtyLimit, /* 9.6.0 */
 };
 
 

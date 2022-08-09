@@ -1601,3 +1601,7 @@ struct _qemuMonitorVcpuDirtyLimitInfo {
 int
 qemuMonitorQueryVcpuDirtyLimit(qemuMonitor *mon,
                                qemuMonitorVcpuDirtyLimitInfo *info);
+
+int
+qemuMonitorCancelVcpuDirtyLimit(qemuMonitor *mon,
+                                int vcpu);

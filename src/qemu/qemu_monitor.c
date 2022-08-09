@@ -4530,3 +4530,14 @@ qemuMonitorQueryVcpuDirtyLimit(qemuMonitor *mon,
 
     return qemuMonitorJSONQueryVcpuDirtyLimit(mon, info);
 }
+
+int
+qemuMonitorCancelVcpuDirtyLimit(qemuMonitor *mon,
+                                int vcpu)
+{
+    VIR_DEBUG("cancel vcpu %d dirty page rate limit", vcpu);
+
+    QEMU_CHECK_MONITOR(mon);
+
+    return qemuMonitorJSONCancelVcpuDirtyLimit(mon, vcpu);
+}
