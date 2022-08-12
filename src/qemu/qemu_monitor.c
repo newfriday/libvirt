@@ -4514,3 +4514,15 @@ qemuMonitorSetVcpuDirtyLimit(qemuMonitor *mon,
 
     return qemuMonitorJSONSetVcpuDirtyLimit(mon, vcpu, rate);
 }
+
+
+int
+qemuMonitorQueryVcpuDirtyLimit(qemuMonitor *mon,
+                               qemuMonitorVcpuDirtyLimitInfo *info)
+{
+    VIR_DEBUG("info=%p", info);
+
+    QEMU_CHECK_MONITOR(mon);
+
+    return qemuMonitorJSONQueryVcpuDirtyLimit(mon, info);
+}

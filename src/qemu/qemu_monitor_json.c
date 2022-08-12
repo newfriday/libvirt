@@ -8929,3 +8929,67 @@ qemuMonitorJSONSetVcpuDirtyLimit(qemuMonitor *mon,
 
     return 0;
 }
+
+static int
+qemuMonitorJSONExtractVcpuDirtyLimitInfo(virJSONValue *data,
+                                         qemuMonitorVcpuDirtyLimitInfo *info)
+{
+    size_t nvcpus;
+    size_t i;
+
+    nvcpus = virJSONValueArraySize(data);
+    info->nvcpus = nvcpus;
+    info->limits = g_new0(qemuMonitorVcpuDirtyLimit, nvcpus);
+
+    for (i = 0; i < nvcpus; i++) {
+        virJSONValue *entry = virJSONValueArrayGet(data, i);
+        if (virJSONValueObjectGetNumberInt(entry, "cpu-index",
+                                           &info->limits[i].idx) < 0) {
+            virReportError(VIR_ERR_INTERNAL_ERROR, "%s",
+                           _("query-vcpu-dirty-limit reply was missing 'cpu-index' data"));
+            return -1;
+        }
+
+        if (virJSONValueObjectGetNumberUlong(entry, "limit-rate",
+                                             &info->limits[i].limit) < 0) {
+            virReportError(VIR_ERR_INTERNAL_ERROR, "%s",
+                           _("query-vcpu-dirty-limit reply was missing 'limit-rate' data"));
+            return -1;
+        }
+
+        if (virJSONValueObjectGetNumberUlong(entry, "current-rate",
+                                            &info->limits[i].current) < 0) {
+            virReportError(VIR_ERR_INTERNAL_ERROR, "%s",
+                           _("query-vcpu-dirty-limit reply was missing 'current-rate' data"));
+            return -1;
+        }
+    }
+
+    return 0;
+}
+
+int
+qemuMonitorJSONQueryVcpuDirtyLimit(qemuMonitor *mon,
+                                   qemuMonitorVcpuDirtyLimitInfo *info)
+{
+    g_autoptr(virJSONValue) cmd = NULL;
+    g_autoptr(virJSONValue) reply = NULL;
+    virJSONValue *data = NULL;
+
+    if (!(cmd = qemuMonitorJSONMakeCommand("query-vcpu-dirty-limit", NULL)))
+        return -1;
+
+    if (qemuMonitorJSONCommand(mon, cmd, &reply) < 0)
+        return -1;
+
+    if (qemuMonitorJSONCheckError(cmd, reply) < 0)
+        return -1;
+
+    if (!(data = virJSONValueObjectGetArray(reply, "return"))) {
+        virReportError(VIR_ERR_INTERNAL_ERROR, "%s",
+                       _("query-vcpu-dirty-limit reply was missing 'return' data"));
+        return -1;
+    }
+
+    return qemuMonitorJSONExtractVcpuDirtyLimitInfo(data, info);
+}
