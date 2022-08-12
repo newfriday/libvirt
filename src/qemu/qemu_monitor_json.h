@@ -830,3 +830,7 @@ int
 qemuMonitorJSONSetVcpuDirtyLimit(qemuMonitor *mon,
                                  int vcpu,
                                  unsigned long long rate);
+
+int
+qemuMonitorJSONQueryVcpuDirtyLimit(qemuMonitor *mon,
+                                   qemuMonitorVcpuDirtyLimitInfo *info);

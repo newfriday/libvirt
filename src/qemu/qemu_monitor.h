@@ -1584,3 +1584,20 @@ int
 qemuMonitorSetVcpuDirtyLimit(qemuMonitor *mon,
                              int vcpu,
                              unsigned long long rate);
+
+typedef struct _qemuMonitorVcpuDirtyLimit qemuMonitorVcpuDirtyLimit;
+struct _qemuMonitorVcpuDirtyLimit {
+    int idx;                        /* virtual cpu index */
+    unsigned long long limit;       /* virtual cpu dirty page rate limit in MB/s */
+    unsigned long long current;     /* virtual cpu dirty page rate in MB/s */
+};
+
+typedef struct _qemuMonitorVcpuDirtyLimitInfo qemuMonitorVcpuDirtyLimitInfo;
+struct _qemuMonitorVcpuDirtyLimitInfo {
+    size_t nvcpus;                      /* number of virtual cpu */
+    qemuMonitorVcpuDirtyLimit *limits;   /* array of dirty page rate limit */
+};
+
+int
+qemuMonitorQueryVcpuDirtyLimit(qemuMonitor *mon,
+                               qemuMonitorVcpuDirtyLimitInfo *info);
