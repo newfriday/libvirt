@@ -4600,6 +4600,57 @@ qemuDomainGetEmulatorPinInfo(virDomainPtr dom,
 }
 
 static int
+qemuDomainGetVcpuDirtyLimit(virDomainObj *vm,
+                            virVcpuInfoPtr info,
+                            int maxinfo)
+{
+    qemuDomainObjPrivate *priv = vm->privateData;
+    qemuMonitorVcpuDirtyLimitInfo dirtylimit_info;
+    size_t cpuinfo_idx = 0;
+    size_t i;
+    int ret = -1;
+
+    if (!virQEMUCapsGet(priv->qemuCaps, QEMU_CAPS_VCPU_DIRTY_LIMIT))
+        return 0;
+
+    if (virDomainObjBeginJob(vm, VIR_JOB_MODIFY) < 0)
+        goto endjob;
+
+    if (virDomainObjCheckActive(vm) < 0)
+        goto endjob;
+
+    qemuDomainObjEnterMonitor(vm);
+    if (qemuMonitorQueryVcpuDirtyLimit(priv->mon, &dirtylimit_info) < 0) {
+        qemuDomainObjExitMonitor(vm);
+        goto endjob;
+    }
+    qemuDomainObjExitMonitor(vm);
+
+    while (cpuinfo_idx < maxinfo) {
+        virVcpuInfoPtr vcpuinfo = info + cpuinfo_idx;
+        for (i = 0; i < dirtylimit_info.nvcpus &&
+             i < virDomainDefGetVcpusMax(vm->def); i++) {
+            /* skip the offline virtual CPU */
+            virDomainVcpuDef *vcpu = virDomainDefGetVcpu(vm->def, i);
+            if (!vcpu->online)
+                continue;
+
+            /* match the index of virtual CPU */
+            if (vcpuinfo->number ==  dirtylimit_info.limits[i].idx) {
+                vcpuinfo->current = dirtylimit_info.limits[i].current;
+                vcpuinfo->limit = dirtylimit_info.limits[i].limit;
+            }
+        }
+        cpuinfo_idx++;
+    }
+    ret = 0;
+
+ endjob:
+    virDomainObjEndJob(vm);
+    return ret;
+}
+
+static int
 qemuDomainGetVcpus(virDomainPtr dom,
                    virVcpuInfoPtr info,
                    int maxinfo,
@@ -4622,6 +4673,10 @@ qemuDomainGetVcpus(virDomainPtr dom,
     }
 
     ret = qemuDomainHelperGetVcpus(vm, info, NULL, NULL, maxinfo, cpumaps, maplen);
+
+    /* append dirty limit data to vcpu info */
+    if (qemuDomainGetVcpuDirtyLimit(vm, info, maxinfo) < 0)
+        goto cleanup;
 
  cleanup:
     virDomainObjEndAPI(&vm);

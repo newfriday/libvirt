@@ -2395,6 +2395,8 @@ struct _virVcpuInfo {
     int state;                  /* value from virVcpuState */
     unsigned long long cpuTime; /* CPU time used, in nanoseconds */
     int cpu;                    /* real CPU number, or one of the values from virVcpuHostCpuState */
+    unsigned long long limit;   /* virtual cpu dirty page rate upper limit in MB/s */
+    unsigned long long current; /* current virtual cpu dirty page rate in MB/s */
 };
 
 /**
