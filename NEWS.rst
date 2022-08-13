@@ -16,6 +16,22 @@ v9.6.0 (unreleased)
 * **Removed features**
 
 * **New features**
+  * qemu: Add support for limiting dirty page rate
+
+    New API ``virDomainSetVcpuDirtyLimit()`` and virsh command
+    ``limit-dirty-page-rate`` are added to set the dirty page rate upper
+    limit.
+
+    New API ``virDomainCancelVcpuDirtyLimit()`` and virsh command option
+    ``limit-dirty-page-rate --cancel`` are added to cancel the dirty page
+    rate upper limit.
+
+    Note that this feature requires dirty-ring size to be configured.
+
+  * qemu: Add support for querying dirty page rate upper limit
+
+    User can query the dirty page rate limit with the virsh command
+    ``vcpuinfo``.
 
 * **Improvements**
 
