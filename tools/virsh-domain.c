@@ -6935,6 +6935,11 @@ cmdVcpuinfo(vshControl *ctl, const vshCmd *cmd)
                                        maxcpu, pretty) < 0)
             return false;
 
+        if (cpuinfo[n].limit != 0) {
+            vshPrint(ctl, "%-15s %lld\n", _("DirtyRate limit:"), cpuinfo[n].limit);
+            vshPrint(ctl, "%-15s %lld\n", _("DirtyRate current:"), cpuinfo[n].current);
+        }
+
         if (n < (ncpus - 1))
             vshPrint(ctl, "\n");
     }

@@ -2147,6 +2147,8 @@ remoteDomainGetVcpus(virDomainPtr domain,
         info[i].state = ret.info.info_val[i].state;
         info[i].cpuTime = ret.info.info_val[i].cpu_time;
         info[i].cpu = ret.info.info_val[i].cpu;
+        info[i].limit = ret.info.info_val[i].limit;
+        info[i].current = ret.info.info_val[i].current;
     }
 
     for (i = 0; i < ret.cpumaps.cpumaps_len; ++i)

@@ -2893,6 +2893,8 @@ remoteDispatchDomainGetVcpus(virNetServer *server G_GNUC_UNUSED,
         ret->info.info_val[i].state = info[i].state;
         ret->info.info_val[i].cpu_time = info[i].cpuTime;
         ret->info.info_val[i].cpu = info[i].cpu;
+        ret->info.info_val[i].limit = info[i].limit;
+        ret->info.info_val[i].current = info[i].current;
     }
 
     /* Don't need to allocate/copy the cpumaps if we make the reasonable

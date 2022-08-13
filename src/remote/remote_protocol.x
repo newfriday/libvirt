@@ -416,6 +416,8 @@ struct remote_vcpu_info {
     int state;
     unsigned hyper cpu_time;
     int cpu;
+    unsigned hyper limit;
+    unsigned hyper current;
 };
 
 /* Wire encoding of virTypedParameter.
