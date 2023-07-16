@@ -353,6 +353,18 @@ vzCheckDiskUnsupportedParams(virDomainDiskDef *disk)
         return -1;
     }
 
+    if (disk->virtio_discard) {
+        virReportError(VIR_ERR_CONFIG_UNSUPPORTED, "%s",
+                       _("Disk virtio_discard is not supported by vz driver."));
+        return -1;
+    }
+
+    if (disk->virtio_write_zeroes) {
+        virReportError(VIR_ERR_CONFIG_UNSUPPORTED, "%s",
+                       _("Disk virtio_write_zeroes is not supported by vz driver."));
+        return -1;
+    }
+
     if (disk->startupPolicy != VIR_DOMAIN_STARTUP_POLICY_DEFAULT) {
         virReportError(VIR_ERR_CONFIG_UNSUPPORTED, "%s",
                        _("Setting up disk startup policy is not "

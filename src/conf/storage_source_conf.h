@@ -400,6 +400,8 @@ struct _virStorageSource {
     int discard; /* enum virDomainDiskDiscard */
     int detect_zeroes; /* enum virDomainDiskDetectZeroes */
     virTristateSwitch discard_no_unref;
+    virTristateSwitch virtio_discard;
+    virTristateSwitch virtio_write_zeroes;
 
     bool floppyimg; /* set to true if the storage source is going to be used
                        as a source for floppy drive */

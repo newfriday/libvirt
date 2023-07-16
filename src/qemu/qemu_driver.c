@@ -14243,9 +14243,11 @@ qemuDomainBlockCopyCommon(virDomainObj *vm,
      * Since 'mirror' has the ambition to replace it we need to propagate
      * it into the mirror too. We do it directly as otherwise we'd need
      * to modify all callers of 'qemuDomainPrepareStorageSourceBlockdev'
-     * Same for discard_no_unref */
+     * Same for discard_no_unref,virtio_discard and virtio_write_zeroes */
     mirror->detect_zeroes = disk->detect_zeroes;
     mirror->discard_no_unref = disk->discard_no_unref;
+    mirror->virtio_discard = disk->virtio_discard;
+    mirror->virtio_write_zeroes = disk->virtio_write_zeroes;
 
     /* If reusing an external image that includes a backing file but the user
      * did not enumerate the chain in the XML we need to detect the chain */

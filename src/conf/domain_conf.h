@@ -607,6 +607,8 @@ struct _virDomainDiskDef {
     unsigned int iothread; /* unused = 0, > 0 specific thread # */
     virDomainDiskDetectZeroes detect_zeroes;
     virTristateSwitch discard_no_unref;
+    virTristateSwitch virtio_discard;
+    virTristateSwitch virtio_write_zeroes;
     char *domain_name; /* backend domain name */
     unsigned int queues;
     unsigned int queue_size;
