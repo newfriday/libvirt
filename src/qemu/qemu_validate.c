@@ -2989,6 +2989,20 @@ qemuValidateDomainDeviceDefDiskFrontend(const virDomainDiskDef *disk,
                            _("queue-size property isn't supported by this QEMU binary"));
             return -1;
         }
+        if (disk->virtio_discard &&
+            !virQEMUCapsGet(qemuCaps, QEMU_CAPS_VIRTIO_BLK_DISCARD)) {
+            virReportError(VIR_ERR_CONFIG_UNSUPPORTED, "%s",
+                           _("discard property for virtio-blk device isn't supported "
+                             "by this QEMU binary"));
+            return -1;
+        }
+        if (disk->virtio_write_zeroes &&
+            !virQEMUCapsGet(qemuCaps, QEMU_CAPS_VIRTIO_BLK_WRITE_ZEROES)) {
+            virReportError(VIR_ERR_CONFIG_UNSUPPORTED, "%s",
+                           _("write_zeroes property for virtio-blk device isn't "
+                             "supported by this QEMU binary"));
+            return -1;
+        }
         break;
 
     case VIR_DOMAIN_DISK_BUS_USB:
