@@ -202,6 +202,8 @@
   <flag name='cryptodev-backend-lkcf'/>
   <flag name='pvpanic-pci'/>
   <flag name='virtio-gpu.blob'/>
+  <flag name='virtio-blk.discard'/>
+  <flag name='virtio-blk.write-zeroes'/>
   <version>7002000</version>
   <microcodeVersion>43100245</microcodeVersion>
   <package>v7.2.0</package>

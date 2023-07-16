@@ -115,6 +115,8 @@
   <flag name='rbd-encryption-layering'/>
   <flag name='rbd-encryption-luks-any'/>
   <flag name='run-with.async-teardown'/>
+  <flag name='virtio-blk.discard'/>
+  <flag name='virtio-blk.write-zeroes'/>
   <version>8000050</version>
   <microcodeVersion>39100245</microcodeVersion>
   <package>v8.0.0-1270-g1c12355b</package>
