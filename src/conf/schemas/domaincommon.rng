@@ -2511,6 +2511,16 @@
         <ref name="discard"/>
       </optional>
       <optional>
+        <attribute name="virtio_discard">
+          <ref name="virOnOff"/>
+        </attribute>
+      </optional>
+      <optional>
+        <attribute name="virtio_write_zeroes">
+          <ref name="virOnOff"/>
+        </attribute>
+      </optional>
+      <optional>
         <ref name="driverIOThread"/>
       </optional>
       <optional>

@@ -7813,6 +7813,14 @@ virDomainDiskDefDriverParseXML(virDomainDiskDef *def,
                        VIR_XML_PROP_NONZERO, &def->discard) < 0)
         return -1;
 
+    if (virXMLPropTristateSwitch(cur, "virtio_discard", VIR_XML_PROP_NONE,
+                                 &def->virtio_discard) < 0)
+        return -1;
+
+    if (virXMLPropTristateSwitch(cur, "virtio_write_zeroes", VIR_XML_PROP_NONE,
+                                 &def->virtio_write_zeroes) < 0)
+        return -1;
+
     if (virXMLPropUInt(cur, "iothread", 10, VIR_XML_PROP_NONZERO, &def->iothread) < 0)
         return -1;
 
@@ -22513,6 +22521,14 @@ virDomainDiskDefFormatDriver(virBuffer *buf,
     if (disk->discard)
         virBufferAsprintf(&attrBuf, " discard='%s'",
                           virDomainDiskDiscardTypeToString(disk->discard));
+
+    if (disk->virtio_discard)
+        virBufferAsprintf(&attrBuf, " virtio_discard='%s'",
+                          virTristateSwitchTypeToString(disk->virtio_discard));
+
+    if (disk->virtio_write_zeroes)
+        virBufferAsprintf(&attrBuf, " virtio_write_zeroes='%s'",
+                          virTristateSwitchTypeToString(disk->virtio_write_zeroes));
 
     if (disk->iothread)
         virBufferAsprintf(&attrBuf, " iothread='%u'", disk->iothread);

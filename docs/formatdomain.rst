@@ -3259,6 +3259,14 @@ paravirtualized driver is specified via the ``disk`` element.
       value can be either "unmap" (allow the discard request to be passed) or
       "ignore" (ignore the discard request). :since:`Since 1.0.6 (QEMU and KVM
       only)`
+   -  The optional ``virtio_discard`` and ``virtio_write_zeroes`` are attributes
+      that control whether discard and write-zeroes requests are handled by the
+      virtio-blk device. The feature is based on DISCARD and WRITE_ZEROES
+      commands introduced in virtio-blk protocol to improve performance when
+      using SSD backend. The value can be either 'on' or 'off'. Note that
+      ``discard`` and ``write_zeroes`` implementations in the block drive layer
+      are parts of the feature logically and should be turned on when enabling
+      the feature. :since:`Since 9.6.0 (QEMU and KVM only)`
    -  The optional ``detect_zeroes`` attribute controls whether to detect zero
       write requests. The value can be "off", "on" or "unmap". First two values
       turn the detection off and on, respectively. The third value ("unmap")
