@@ -2949,6 +2949,15 @@ qemuValidateDomainDeviceDefDiskFrontend(const virDomainDiskDef *disk,
         }
     }
 
+    if (disk->virtio_discard || disk->virtio_write_zeroes) {
+        if (disk->bus != VIR_DOMAIN_DISK_BUS_VIRTIO) {
+            virReportError(VIR_ERR_INTERNAL_ERROR, "%s",
+                           _("virtio_discard and virtio_write_zeroes options are "
+                             "only valid for VIRTIO bus"));
+            return -1;
+        }
+    }
+
     switch (disk->bus) {
     case VIR_DOMAIN_DISK_BUS_SCSI:
         if (disk->info.type != VIR_DOMAIN_DEVICE_ADDRESS_TYPE_DRIVE) {

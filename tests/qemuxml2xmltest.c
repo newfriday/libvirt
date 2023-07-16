@@ -600,6 +600,7 @@ mymain(void)
     DO_TEST_CAPS_LATEST("disk-discard");
     DO_TEST_CAPS_LATEST("disk-detect-zeroes");
     DO_TEST_CAPS_LATEST("disk-discard_no_unref");
+    DO_TEST_CAPS_LATEST("disk-virtio-discard");
 
     DO_TEST_NOCAPS("disk-serial");
 

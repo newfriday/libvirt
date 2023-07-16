@@ -1834,6 +1834,8 @@ qemuBuildDiskDeviceProps(const virDomainDef *def,
                                   "T:scsi", scsi,
                                   "p:num-queues", disk->queues,
                                   "p:queue-size", disk->queue_size,
+                                  "T:discard", disk->virtio_discard,
+                                  "T:write-zeroes", disk->virtio_write_zeroes,
                                   NULL) < 0)
             return NULL;
     }

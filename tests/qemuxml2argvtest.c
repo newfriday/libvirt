@@ -1420,6 +1420,7 @@ mymain(void)
     DO_TEST_CAPS_LATEST("net-vdpa");
     DO_TEST_CAPS_LATEST("net-vdpa-multiqueue");
     DO_TEST_CAPS_LATEST("net-virtio-rss");
+    DO_TEST_CAPS_LATEST("disk-virtio-discard");
 
     DO_TEST("hostdev-pci-multifunction",
             QEMU_CAPS_KVM,
