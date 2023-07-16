@@ -123,6 +123,8 @@
   <flag name='virtio-iommu-pci'/>
   <flag name='usb-host.guest-resets-all'/>
   <flag name='virtio-crypto'/>
+  <flag name='virtio-blk.discard'/>
+  <flag name='virtio-blk.write-zeroes'/>
   <version>5000000</version>
   <microcodeVersion>61700241</microcodeVersion>
   <package>v5.0.0</package>

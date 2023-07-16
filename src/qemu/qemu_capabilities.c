@@ -697,6 +697,8 @@ VIR_ENUM_IMPL(virQEMUCaps,
 
               /* 450 */
               "run-with.async-teardown", /* QEMU_CAPS_RUN_WITH_ASYNC_TEARDOWN */
+              "virtio-blk.discard", /* QEMU_CAPS_VIRTIO_BLK_DISCARD */
+              "virtio-blk.write-zeroes", /* QEMU_CAPS_VIRTIO_BLK_WRITE_ZEROES */
     );
 
 
@@ -1422,6 +1424,8 @@ static struct virQEMUCapsDevicePropsFlags virQEMUCapsDevicePropsVirtioBlk[] = {
     { "scsi", QEMU_CAPS_VIRTIO_BLK_SCSI, virQEMUCapsDevicePropsVirtioBlkSCSIDefault },
     { "queue-size", QEMU_CAPS_VIRTIO_BLK_QUEUE_SIZE, NULL },
     { "acpi-index", QEMU_CAPS_ACPI_INDEX, NULL },
+    { "discard", QEMU_CAPS_VIRTIO_BLK_DISCARD, NULL },
+    { "write-zeroes", QEMU_CAPS_VIRTIO_BLK_WRITE_ZEROES, NULL },
 };
 
 static struct virQEMUCapsDevicePropsFlags virQEMUCapsDevicePropsVirtioNet[] = {

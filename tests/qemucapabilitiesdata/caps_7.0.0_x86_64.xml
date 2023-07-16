@@ -195,6 +195,8 @@
   <flag name='virtio-crypto'/>
   <flag name='pvpanic-pci'/>
   <flag name='virtio-gpu.blob'/>
+  <flag name='virtio-blk.discard'/>
+  <flag name='virtio-blk.write-zeroes'/>
   <version>7000000</version>
   <microcodeVersion>43100243</microcodeVersion>
   <package>v7.0.0</package>
