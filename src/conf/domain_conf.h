@@ -604,6 +604,8 @@ struct _virDomainDiskDef {
     virTristateBool rawio;
     virDomainDeviceSGIO sgio;
     virDomainDiskDiscard discard;
+    virTristateSwitch virtio_discard;
+    virTristateSwitch virtio_write_zeroes;
     unsigned int iothread; /* unused = 0, > 0 specific thread # */
     virDomainDiskDetectZeroes detect_zeroes;
     virTristateSwitch discard_no_unref;
