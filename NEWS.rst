@@ -17,6 +17,14 @@ v9.6.0 (unreleased)
 
 * **New features**
 
+  * qemu: Introducing ``discard`` and ``write_zeroes`` features of virtio-blk device
+
+    The optional ``virtio_discard`` and ``virtio_write_zeroes`` attributes
+    control whether discard and write-zeroes requests are handled by the
+    virtio-blk device. The feature is based on DISCARD and WRITE_ZEROES commands
+    introduced in virtio-blk protocol to improve performance when using SSD
+    backend.
+
 * **Improvements**
 
   * apparmor: All profiles and abstractions now support local overrides
