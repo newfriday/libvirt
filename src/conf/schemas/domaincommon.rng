@@ -859,6 +859,11 @@
                   <ref name="unsignedInt"/>
                 </attribute>
               </optional>
+              <optional>
+                <attribute name="dirty_limit">
+                  <ref name="unsignedLong"/>
+                </attribute>
+              </optional>
             </element>
           </zeroOrMore>
         </element>

@@ -649,7 +649,7 @@ CPU Allocation
      ...
      <vcpu placement='static' cpuset="1-4,^3,6" current="1">2</vcpu>
      <vcpus>
-       <vcpu id='0' enabled='yes' hotpluggable='no' order='1'/>
+       <vcpu id='0' enabled='yes' hotpluggable='no' order='1' dirty_limit='64'/>
        <vcpu id='1' enabled='no' hotpluggable='yes'/>
      </vcpus>
      ...
@@ -715,6 +715,11 @@ CPU Allocation
    be enabled and non-hotpluggable. On PPC64 along with it vCPUs that are in the
    same core need to be enabled as well. All non-hotpluggable CPUs present at
    boot need to be grouped after vCPU 0. :since:`Since 2.2.0 (QEMU only)`
+   ``dirty_limit`` :since:`Since 9.6.0 (QEMU and KVM only)`
+   The optional attribute ``dirty_limit`` allows to set an upper limit (MB/s)
+   of the dirty page rate for the vCPU. User can change the upper limit value
+   dynamically by using ``limit-dirty-page-rate`` API. Require ``dirty-ring``
+   size configured.
 
 
 IOThreads Allocation
