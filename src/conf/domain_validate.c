@@ -1785,6 +1785,36 @@ virDomainDefValidateIOThreads(const virDomainDef *def)
     return 0;
 }
 
+static int
+virDomainDefHasDirtyLimitStartupVcpus(const virDomainDef *def)
+{
+    size_t maxvcpus = virDomainDefGetVcpusMax(def);
+    virDomainVcpuDef *vcpu;
+    size_t i;
+
+    for (i = 0; i < maxvcpus; i++) {
+        vcpu = def->vcpus[i];
+
+        if (vcpu->dirtyLimitSet && (vcpu->dirty_limit != 0))
+            return true;
+    }
+
+    return false;
+}
+
+static int
+virDomainDefDirtyLimitValidate(const virDomainDef *def)
+{
+    if (virDomainDefHasDirtyLimitStartupVcpus(def)) {
+        if (def->kvm_features->dirty_ring_size == 0) {
+            virReportError(VIR_ERR_XML_ERROR, "%s",
+                           _("Dirty limit requires dirty-ring size configuration"));
+            return -1;
+        }
+    }
+
+    return 0;
+}
 
 static int
 virDomainDefValidateInternal(const virDomainDef *def,
@@ -1839,6 +1869,9 @@ virDomainDefValidateInternal(const virDomainDef *def,
         return -1;
 
     if (virDomainDefValidateIOThreads(def) < 0)
+        return -1;
+
+    if (virDomainDefDirtyLimitValidate(def) < 0)
         return -1;
 
     return 0;

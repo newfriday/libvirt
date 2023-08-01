@@ -2812,6 +2812,14 @@ struct _virDomainVcpuDef {
     virDomainThreadSchedParam sched;
 
     virObject *privateData;
+
+    /* set to true if the dirty page rate upper limit for
+     * the virtual CPU is configured
+     * */
+    bool dirtyLimitSet;
+
+    /* dirty page rate upper limit */
+    unsigned long long dirty_limit;
 };
 
 struct _virDomainBlkiotune {

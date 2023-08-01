@@ -17088,6 +17088,7 @@ virDomainVcpuParse(virDomainDef *def,
                    virDomainXMLOption *xmlopt)
 {
     int n;
+    int rv;
     xmlNodePtr vcpuNode;
     size_t i;
     unsigned int maxvcpus;
@@ -17175,6 +17176,13 @@ virDomainVcpuParse(virDomainDef *def,
             if (virXMLPropUInt(nodes[i], "order", 10, VIR_XML_PROP_NONE,
                                &vcpu->order) < 0)
                 return -1;
+
+            if ((rv = virXMLPropULongLong(nodes[i], "dirty_limit", 10, VIR_XML_PROP_NONNEGATIVE,
+                                          &vcpu->dirty_limit)) < 0) {
+                return -1;
+            } else if (rv > 0) {
+                vcpu->dirtyLimitSet = true;
+            }
         }
     } else {
         if (virDomainDefSetVcpus(def, vcpus) < 0)
@@ -21216,6 +21224,20 @@ virDomainDefVcpuCheckAbiStability(virDomainDef *src,
         if (svcpu->order != dvcpu->order) {
             virReportError(VIR_ERR_CONFIG_UNSUPPORTED,
                            _("vcpu enable order of vCPU '%1$zu' differs between source and destination definitions"),
+                           i);
+            return false;
+        }
+
+        if (svcpu->dirtyLimitSet != dvcpu->dirtyLimitSet) {
+            virReportError(VIR_ERR_CONFIG_UNSUPPORTED,
+                           _("Dirty limit state of vCPU '%1$zu' differs between source and destination definitions"),
+                           i);
+            return false;
+        }
+
+        if (svcpu->dirty_limit != dvcpu->dirty_limit) {
+            virReportError(VIR_ERR_CONFIG_UNSUPPORTED,
+                           _("Dirty limit of vCPU '%1$zu' differs between source and destination definitions"),
                            i);
             return false;
         }
@@ -26821,6 +26843,10 @@ virDomainCpuDefFormat(virBuffer *buf,
 
             if (vcpu->order != 0)
                 virBufferAsprintf(buf, " order='%d'", vcpu->order);
+
+            if (vcpu->dirtyLimitSet) {
+                virBufferAsprintf(buf, " dirty_limit='%llu'", vcpu->dirty_limit);
+            }
 
             virBufferAddLit(buf, "/>\n");
         }
