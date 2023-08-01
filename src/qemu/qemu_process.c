@@ -6162,6 +6162,46 @@ qemuDomainHasHotpluggableStartupVcpus(virDomainDef *def)
 
 
 static int
+qemuProcessSetupDirtyLimit(virDomainObj *vm,
+                           virDomainAsyncJob asyncJob)
+{
+    qemuDomainObjPrivate *priv = vm->privateData;
+    virDomainDef *def = vm->def;
+    int ret = -1;
+
+    /* Dirty limit capability is not present, skip the setup */
+    if (!virQEMUCapsGet(priv->qemuCaps, QEMU_CAPS_VCPU_DIRTY_LIMIT))
+        return 0;
+
+    if (virDomainDefHasDirtyLimitStartupVcpus(def)) {
+        size_t maxvcpus = virDomainDefGetVcpusMax(def);
+        virDomainVcpuDef *vcpu;
+        size_t i;
+
+        if (qemuDomainObjEnterMonitorAsync(vm, asyncJob) < 0)
+            return -1;
+
+        for (i = 0; i < maxvcpus; i++) {
+            vcpu = virDomainDefGetVcpu(def, i);
+
+            if (vcpu->dirtyLimitSet && (vcpu->dirty_limit != 0)) {
+                if ((ret = qemuMonitorSetVcpuDirtyLimit(priv->mon, i, vcpu->dirty_limit)) < 0) {
+                    virReportError(VIR_ERR_INTERNAL_ERROR,
+                                   _("Failed to set dirty page rate limit of vcpu[%1$zu]"), i);
+                    qemuDomainObjExitMonitor(vm);
+                    return ret;
+                }
+                VIR_DEBUG("Set vcpu[%zu] dirty page rate limit %lld", i, vcpu->dirty_limit);
+            }
+        }
+        qemuDomainObjExitMonitor(vm);
+    }
+
+    return 0;
+}
+
+
+static int
 qemuProcessVcpusSortOrder(const void *a,
                           const void *b)
 {
@@ -7837,6 +7877,10 @@ qemuProcessLaunch(virConnectPtr conn,
 
     VIR_DEBUG("Verifying and updating provided guest CPU");
     if (qemuProcessUpdateAndVerifyCPU(vm, asyncJob) < 0)
+        goto cleanup;
+
+    VIR_DEBUG("Setting Dirty Limit for virtual CPUs");
+    if (qemuProcessSetupDirtyLimit(vm, asyncJob) < 0)
         goto cleanup;
 
     VIR_DEBUG("Detecting IOThread PIDs");
