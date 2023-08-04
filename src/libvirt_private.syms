@@ -793,6 +793,7 @@ virDomainDefPostParse;
 
 # conf/domain_validate.h
 virDomainActualNetDefValidate;
+virDomainDefHasDirtyLimitStartupVcpus;
 virDomainDefOSValidate;
 virDomainDefValidate;
 virDomainDeviceValidateAliasForHotplug;
