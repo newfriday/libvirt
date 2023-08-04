@@ -1785,7 +1785,7 @@ virDomainDefValidateIOThreads(const virDomainDef *def)
     return 0;
 }
 
-static int
+int
 virDomainDefHasDirtyLimitStartupVcpus(const virDomainDef *def)
 {
     size_t maxvcpus = virDomainDefGetVcpusMax(def);

@@ -47,3 +47,5 @@ int virDomainDiskDefSourceLUNValidate(const virStorageSource *src);
 
 int virDomainDefOSValidate(const virDomainDef *def,
                            virDomainXMLOption *xmlopt);
+
+int virDomainDefHasDirtyLimitStartupVcpus(const virDomainDef *def);
