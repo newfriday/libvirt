@@ -676,6 +676,7 @@ typedef enum { /* virQEMUCapsFlags grouping marker for syntax-check */
 
     /* 450 */
     QEMU_CAPS_RUN_WITH_ASYNC_TEARDOWN, /* asynchronous teardown -run-with async-teardown=on|off */
+    QEMU_CAPS_VIRTIO_BLK_AUTO_NUM_QUEUES, /* virtio-blk-*.auto-num-queues */
 
     QEMU_CAPS_LAST /* this must always be the last item */
 } virQEMUCapsFlags;

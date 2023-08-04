@@ -26013,6 +26013,10 @@
     {
       "name": "serial",
       "type": "str"
+    },
+    {
+      "name": "auto-num-queues",
+      "type": "bool"
     }
   ],
   "id": "libvirt-7"
