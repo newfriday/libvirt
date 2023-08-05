@@ -2501,6 +2501,10 @@ qemuMigrationSrcBeginXML(virDomainObj *vm,
     if (!(flags & VIR_MIGRATE_OFFLINE))
         cookieFlags |= QEMU_MIGRATION_COOKIE_CAPS;
 
+    if (virQEMUCapsGet(priv->qemuCaps,
+                       QEMU_CAPS_VIRTIO_BLK_AUTO_NUM_QUEUES))
+        cookieFlags |= QEMU_MIGRATION_COOKIE_AUTO_NUM_QUEUES_CAP;
+
     if (!(mig = qemuMigrationCookieNew(vm->def, priv->origname)))
         return NULL;
 
@@ -3336,7 +3340,8 @@ qemuMigrationDstPrepareFresh(virQEMUDriver *driver,
                                          QEMU_MIGRATION_COOKIE_CPU_HOTPLUG |
                                          QEMU_MIGRATION_COOKIE_CPU |
                                          QEMU_MIGRATION_COOKIE_CAPS |
-                                         QEMU_MIGRATION_COOKIE_BLOCK_DIRTY_BITMAPS)))
+                                         QEMU_MIGRATION_COOKIE_BLOCK_DIRTY_BITMAPS |
+                                         QEMU_MIGRATION_COOKIE_AUTO_NUM_QUEUES_CAP)))
         goto cleanup;
 
     if (!(vm = virDomainObjListAdd(driver->domains, def,
@@ -4784,7 +4789,8 @@ qemuMigrationSrcRun(virQEMUDriver *driver,
                                    cookieFlags |
                                    QEMU_MIGRATION_COOKIE_GRAPHICS |
                                    QEMU_MIGRATION_COOKIE_CAPS |
-                                   QEMU_MIGRATION_COOKIE_BLOCK_DIRTY_BITMAPS);
+                                   QEMU_MIGRATION_COOKIE_BLOCK_DIRTY_BITMAPS |
+                                   QEMU_MIGRATION_COOKIE_AUTO_NUM_QUEUES_CAP);
     if (!mig)
         goto error;
 

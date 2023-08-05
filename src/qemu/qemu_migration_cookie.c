@@ -51,6 +51,7 @@ VIR_ENUM_IMPL(qemuMigrationCookieFlag,
               "allowReboot",
               "capabilities",
               "block-dirty-bitmaps",
+              "auto-num-queues-cap",
 );
 
 
@@ -575,6 +576,21 @@ qemuMigrationCookieAddCaps(qemuMigrationCookie *mig,
     return 0;
 }
 
+static void
+qemuMigrationCookieAddAutoNumQueues(qemuMigrationCookie *mig,
+                                    virDomainObj *vm)
+{
+    qemuDomainObjPrivate *priv = vm->privateData;
+
+    /* Only if auto-num-queues capability is not present on source
+     * side, set the disable_auto_num_queues to true; false otherwise.
+     * */
+    if (!virQEMUCapsGet(priv->qemuCaps, QEMU_CAPS_VIRTIO_BLK_AUTO_NUM_QUEUES)) {
+        mig->disable_auto_num_queues = true;
+    }
+
+    mig->flags |= QEMU_MIGRATION_COOKIE_AUTO_NUM_QUEUES_CAP;
+}
 
 static void
 qemuMigrationCookieGraphicsXMLFormat(virBuffer *buf,
@@ -820,6 +836,15 @@ qemuMigrationCookieBlockDirtyBitmapsFormat(virBuffer *buf,
 }
 
 
+static void
+qemuMigrationCookieAutoNumQueuesXMLFormat(virBuffer *buf,
+                                          virTristateBool disable_auto_num_queues)
+{
+    virBufferAsprintf(buf, "<disable_auto_num_queues value='%s'/>\n",
+                      virTristateBoolTypeToString(disable_auto_num_queues));
+}
+
+
 int
 qemuMigrationCookieXMLFormat(virQEMUDriver *driver,
                              virQEMUCaps *qemuCaps,
@@ -890,6 +915,10 @@ qemuMigrationCookieXMLFormat(virQEMUDriver *driver,
 
     if (mig->flags & QEMU_MIGRATION_COOKIE_BLOCK_DIRTY_BITMAPS)
         qemuMigrationCookieBlockDirtyBitmapsFormat(buf, mig->blockDirtyBitmaps);
+
+    if (mig->flags & QEMU_MIGRATION_COOKIE_AUTO_NUM_QUEUES_CAP) {
+        qemuMigrationCookieAutoNumQueuesXMLFormat(buf, mig->disable_auto_num_queues);
+    }
 
     virBufferAdjustIndent(buf, -2);
     virBufferAddLit(buf, "</qemu-migration>\n");
@@ -1255,6 +1284,26 @@ qemuMigrationCookieBlockDirtyBitmapsParse(xmlXPathContextPtr ctxt,
 
 
 static int
+qemuMigrationCookieAutoNumQueuesCapXMLParse(xmlXPathContextPtr ctxt,
+                                            virTristateBool *disable_auto_num_queues)
+{
+    int val;
+    g_autofree char *valStr = NULL;
+
+    if ((valStr = virXPathString("string(./disable_auto_num_queues/@value)", ctxt))) {
+        if ((val = virTristateBoolTypeFromString(valStr)) < 0) {
+            virReportError(VIR_ERR_INTERNAL_ERROR,
+                           _("invalid disable_auto_num_queues value '%1$s'"), valStr);
+            return -1;
+        }
+        *disable_auto_num_queues = val;
+    }
+
+    return 0;
+}
+
+
+static int
 qemuMigrationCookieXMLParse(qemuMigrationCookie *mig,
                             virQEMUDriver *driver,
                             virQEMUCaps *qemuCaps,
@@ -1400,6 +1449,10 @@ qemuMigrationCookieXMLParse(qemuMigrationCookie *mig,
         qemuMigrationCookieBlockDirtyBitmapsParse(ctxt, mig) < 0)
         return -1;
 
+    if (flags & QEMU_MIGRATION_COOKIE_AUTO_NUM_QUEUES_CAP &&
+        qemuMigrationCookieAutoNumQueuesCapXMLParse(ctxt, &mig->disable_auto_num_queues) < 0)
+        return -1;
+
     return 0;
 }
 
@@ -1474,6 +1527,9 @@ qemuMigrationCookieFormat(qemuMigrationCookie *mig,
     if (flags & QEMU_MIGRATION_COOKIE_CAPS &&
         qemuMigrationCookieAddCaps(mig, dom, party) < 0)
         return -1;
+
+    if (flags & QEMU_MIGRATION_COOKIE_AUTO_NUM_QUEUES_CAP)
+        qemuMigrationCookieAddAutoNumQueues(mig, dom);
 
     if (qemuMigrationCookieXMLFormat(driver, priv->qemuCaps, &buf, mig) < 0)
         return -1;
