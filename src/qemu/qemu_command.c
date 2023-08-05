@@ -1806,6 +1806,7 @@ qemuBuildDiskDeviceProps(const virDomainDef *def,
 
     case VIR_DOMAIN_DISK_BUS_VIRTIO: {
         virTristateSwitch scsi = VIR_TRISTATE_SWITCH_ABSENT;
+        virTristateSwitch auto_num_queues = VIR_TRISTATE_SWITCH_ABSENT;
         g_autofree char *iothread = NULL;
 
         if (disk->iothread > 0)
@@ -1824,6 +1825,17 @@ qemuBuildDiskDeviceProps(const virDomainDef *def,
             }
         }
 
+        if (virQEMUCapsGet(qemuCaps, QEMU_CAPS_VIRTIO_BLK_AUTO_NUM_QUEUES)) {
+            /* If disable_auto_num_queues is true, it indicate that the source
+             * hypervisor does not support QEMU_CAPS_VIRTIO_BLK_AUTO_NUM_QUEUES
+             * capability. To make the destination compatible with the source,
+             * auto-num-queue should be switched off for destination hypervisor
+             * to lanuch an incoming VM during live migration.
+             * */
+            if (def->disable_auto_num_queues)
+                auto_num_queues = VIR_TRISTATE_SWITCH_OFF;
+        }
+
         if (!(props = qemuBuildVirtioDevProps(VIR_DOMAIN_DEVICE_DISK, disk, qemuCaps)))
             return NULL;
 
@@ -1832,6 +1844,7 @@ qemuBuildDiskDeviceProps(const virDomainDef *def,
                                   "T:ioeventfd", disk->ioeventfd,
                                   "T:event_idx", disk->event_idx,
                                   "T:scsi", scsi,
+                                  "T:auto-num-queues", auto_num_queues,
                                   "p:num-queues", disk->queues,
                                   "p:queue-size", disk->queue_size,
                                   NULL) < 0)

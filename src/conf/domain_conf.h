@@ -3137,6 +3137,12 @@ struct _virDomainDef {
                              should be re-run before starting */
 
     unsigned int scsiBusMaxUnit;
+
+    /* For the destination VM in the case of live migration, set
+     * it to true if the hypervisor of source side does not support the
+     * QEMU_CAPS_VIRTIO_BLK_AUTO_NUM_QUEUES capability.
+     * */
+    bool disable_auto_num_queues;
 };
 
 
