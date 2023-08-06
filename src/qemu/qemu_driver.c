@@ -17679,6 +17679,50 @@ qemuDomainGetStatsVm(virQEMUDriver *driver G_GNUC_UNUSED,
     return 0;
 }
 
+
+static int
+qemuDomainGetStatsDirtyLimitMon(virDomainObj *vm,
+                                qemuMonitorVcpuDirtyLimitInfo *info)
+{
+    qemuDomainObjPrivate *priv = vm->privateData;
+    int ret;
+
+    qemuDomainObjEnterMonitor(vm);
+    ret = qemuMonitorQueryVcpuDirtyLimit(priv->mon, info);
+    qemuDomainObjExitMonitor(vm);
+
+    return ret;
+}
+
+
+static int
+qemuDomainGetStatsDirtyLimit(virQEMUDriver *driver G_GNUC_UNUSED,
+                             virDomainObj *dom,
+                             virTypedParamList *params,
+                             unsigned int privflags)
+{
+    qemuMonitorVcpuDirtyLimitInfo info;
+    size_t i;
+
+    if (!HAVE_JOB(privflags) || !virDomainObjIsActive(dom))
+        return 0;
+
+    if (qemuDomainGetStatsDirtyLimitMon(dom, &info) < 0)
+        return -1;
+
+    for (i = 0; i < info.nvcpus; i++) {
+        virTypedParamListAddULLong(params, info.limits[i].limit,
+                                   "dirtylimit.vcpu.%d.limit",
+                                   info.limits[i].idx);
+        virTypedParamListAddULLong(params, info.limits[i].current,
+                                   "dirtylimit.vcpu.%d.current",
+                                   info.limits[i].idx);
+    }
+
+    return 0;
+}
+
+
 typedef int
 (*qemuDomainGetStatsFunc)(virQEMUDriver *driver,
                           virDomainObj *dom,
@@ -17703,6 +17747,11 @@ static virQEMUCapsFlags queryVmRequired[] = {
     QEMU_CAPS_LAST
 };
 
+static virQEMUCapsFlags queryDirtyLimitRequired[] = {
+    QEMU_CAPS_VCPU_DIRTY_LIMIT,
+    QEMU_CAPS_LAST
+};
+
 static struct qemuDomainGetStatsWorker qemuDomainGetStatsWorkers[] = {
     { qemuDomainGetStatsState, VIR_DOMAIN_STATS_STATE, false, NULL },
     { qemuDomainGetStatsCpu, VIR_DOMAIN_STATS_CPU_TOTAL, true, NULL },
@@ -17715,6 +17764,7 @@ static struct qemuDomainGetStatsWorker qemuDomainGetStatsWorkers[] = {
     { qemuDomainGetStatsMemory, VIR_DOMAIN_STATS_MEMORY, false, NULL },
     { qemuDomainGetStatsDirtyRate, VIR_DOMAIN_STATS_DIRTYRATE, true, queryDirtyRateRequired },
     { qemuDomainGetStatsVm, VIR_DOMAIN_STATS_VM, true, queryVmRequired },
+    { qemuDomainGetStatsDirtyLimit, VIR_DOMAIN_STATS_DIRTYLIMIT, true, queryDirtyLimitRequired },
     { NULL, 0, false, NULL }
 };
 
