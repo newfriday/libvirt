@@ -2317,7 +2317,7 @@ domstats
    domstats [--raw] [--enforce] [--backing] [--nowait] [--state]
       [--cpu-total] [--balloon] [--vcpu] [--interface]
       [--block] [--perf] [--iothread] [--memory] [--dirtyrate] [--vm]
-      [[--list-active] [--list-inactive]
+      [--dirtylimit] [[--list-active] [--list-inactive]
        [--list-persistent] [--list-transient] [--list-running]y
        [--list-paused] [--list-shutoff] [--list-other]] | [domain ...]
 
@@ -2336,7 +2336,7 @@ The individual statistics groups are selectable via specific flags. By
 default all supported statistics groups are returned. Supported
 statistics groups flags are: *--state*, *--cpu-total*, *--balloon*,
 *--vcpu*, *--interface*, *--block*, *--perf*, *--iothread*, *--memory*,
-*--dirtyrate*, *--vm*.
+*--dirtyrate*, *--vm*, *--dirtylimit*.
 
 Note that - depending on the hypervisor type and version or the domain state
 - not all of the following statistics may be returned.
@@ -2578,6 +2578,14 @@ not available for statistical purposes.
 
 The *--vm* option enables reporting of hypervisor-specific statistics. Naming
 and meaning of the fields is entirely hypervisor dependent.
+
+
+*--dirtylimit* returns:
+
+* ``dirtylimit.vcpu.<num>.limit`` - the upper limit of dirty page rate for a
+  virtual CPU in megabyte/s
+* ``dirtylimit.vcpu.<num>.current`` - the dirty page rate for a virtual CPU
+  currently in megabyte/s
 
 The statistics in this group have the following naming scheme:
 
