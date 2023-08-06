@@ -12514,6 +12514,15 @@ virConnectGetDomainCapabilities(virConnectPtr conn,
  *      naming or meaning will stay consistent. Changes to existing fields,
  *      however, are expected to be rare.
  *
+ * VIR_DOMAIN_STATS_DIRTYLIMIT:
+ *     Return virtual CPU dirty limit information. The typed parameter keys are in
+ *     this format:
+ *
+ *     "dirtylimit.vcpu.<num>.limit" - The dirty page rate upper limit for the
+ *                                     virtual CPU, in MB/s.
+ *     "dirtylimit.vcpu.<num>.current" - The dirty page rate for the virtual CPU
+ *                                       currently, in MB/s.
+ *
  * Note that entire stats groups or individual stat fields may be missing from
  * the output in case they are not supported by the given hypervisor, are not
  * applicable for the current state of the guest domain, or their retrieval
