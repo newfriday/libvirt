@@ -99,6 +99,7 @@ VIR_ENUM_IMPL(qemuMigrationCapability,
               "dirty-bitmaps",
               "return-path",
               "zero-copy-send",
+              "dirty-limit",
 );
 
 
@@ -193,6 +194,11 @@ static const qemuMigrationParamsFlagMapItem qemuMigrationParamsFlagMap[] = {
     {QEMU_MIGRATION_FLAG_REQUIRED,
      VIR_MIGRATE_ZEROCOPY,
      QEMU_MIGRATION_CAP_ZERO_COPY_SEND,
+     QEMU_MIGRATION_SOURCE},
+
+    {QEMU_MIGRATION_FLAG_REQUIRED,
+     VIR_MIGRATE_DIRTY_LIMIT,
+     QEMU_MIGRATION_CAP_DIRTY_LIMIT,
      QEMU_MIGRATION_SOURCE},
 };
 
