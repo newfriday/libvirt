@@ -2571,6 +2571,14 @@ qemuMigrationSrcBeginPhase(virQEMUDriver *driver,
     if (!qemuMigrationSrcIsAllowed(vm, true, vm->job->asyncJob, flags))
         return NULL;
 
+    if (flags & VIR_MIGRATE_DIRTY_LIMIT &&
+        (!(vm->def->features[VIR_DOMAIN_FEATURE_KVM] == VIR_TRISTATE_SWITCH_ON &&
+           vm->def->kvm_features->features[VIR_DOMAIN_KVM_DIRTY_RING] == VIR_TRISTATE_SWITCH_ON))) {
+        virReportError(VIR_ERR_ARGUMENT_UNSUPPORTED, "%s",
+                       _("dirtylimit migration requires dirty-ring features enabled"));
+        return NULL;
+    }
+
     if (!(flags & (VIR_MIGRATE_UNSAFE | VIR_MIGRATE_OFFLINE)) &&
         !qemuMigrationSrcIsSafe(vm->def, priv->qemuCaps,
                                 nmigrate_disks, migrate_disks, flags))
