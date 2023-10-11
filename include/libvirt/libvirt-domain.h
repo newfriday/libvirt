@@ -1100,6 +1100,11 @@ typedef enum {
      * Since: 8.5.0
      */
     VIR_MIGRATE_ZEROCOPY = (1 << 20),
+
+    /* Enable dirty-limit capability to make migration convergent.
+     * Since: 9.9.0
+     */
+    VIR_MIGRATE_DIRTY_LIMIT = (1 << 21),
 } virDomainMigrateFlags;
 
 
