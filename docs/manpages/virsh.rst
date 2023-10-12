@@ -3376,7 +3376,7 @@ migrate
       [--compressed] [--comp-methods method-list]
       [--comp-mt-level] [--comp-mt-threads] [--comp-mt-dthreads]
       [--comp-xbzrle-cache] [--comp-zlib-level] [--comp-zstd-level]
-      [--auto-converge] [auto-converge-initial]
+      [--dirty-limit] [--auto-converge] [auto-converge-initial]
       [auto-converge-increment] [--persistent-xml file] [--tls]
       [--postcopy-bandwidth bandwidth]
       [--parallel [--parallel-connections connections]]
@@ -3431,6 +3431,14 @@ while migration is in post-copy mode, the domain cannot be resumed on either
 source or destination host and the ``migrate`` command will report an error
 leaving the domain active on both hosts. To recover from such situation repeat
 the original ``migrate`` command with an additional *--postcopy-resume* flag.
+
+*--dirty-limit* forces convergence using dirty-limit algorithms during live
+migration. For QEMU/KVM, this means migration will throttle vCPUs as needed to
+keep their dirty page rate within the migration parameter ``vcpu-dirty-limit``
+(1 megabits/s by default). This can improve the responsiveness of large guests
+during live migration and result in more stable read performance. It requires
+dirty-ring size configuration and conflicts with the traditional
+``auto-converge`` algorithm.
 
 *--auto-converge* forces convergence during live migration. The initial
 guest CPU throttling rate can be set with *auto-converge-initial*. If the
