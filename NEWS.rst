@@ -25,6 +25,14 @@ v9.9.0 (unreleased)
     guest features to see if the current libvirt supports both deleting
     and reverting external snapshots.
 
+  * QEMU: Support dirty-limit live migration
+
+    Introduce ``VIR_MIGRATE_DIRTY_LIMIT`` flag for live migration API,
+    which can enable the dirty-limit convergence algorithm during live
+    migration and reap more stable read performance for guest vCPUs.
+
+    Also, add the corresponding ``--dirty-limit`` option to ``virsh migrate``.
+
 * **Improvements**
 
 * **Bug fixes**
