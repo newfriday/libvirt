@@ -4213,6 +4213,10 @@ virDomainMigrate3(virDomainPtr domain,
     /* Now checkout the destination */
     virCheckReadOnlyGoto(dconn->flags, error);
 
+    VIR_EXCLUSIVE_FLAGS_GOTO(VIR_MIGRATE_AUTO_CONVERGE,
+                             VIR_MIGRATE_DIRTY_LIMIT,
+                             error);
+
     VIR_EXCLUSIVE_FLAGS_GOTO(VIR_MIGRATE_NON_SHARED_DISK,
                              VIR_MIGRATE_NON_SHARED_INC,
                              error);
@@ -4636,6 +4640,10 @@ virDomainMigrateToURI3(virDomainPtr domain,
     /* First checkout the source */
     virCheckDomainReturn(domain, -1);
     virCheckReadOnlyGoto(domain->conn->flags, error);
+
+    VIR_EXCLUSIVE_FLAGS_GOTO(VIR_MIGRATE_AUTO_CONVERGE,
+                             VIR_MIGRATE_DIRTY_LIMIT,
+                             error);
 
     VIR_EXCLUSIVE_FLAGS_GOTO(VIR_MIGRATE_TUNNELLED,
                              VIR_MIGRATE_PARALLEL,

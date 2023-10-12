@@ -10922,6 +10922,10 @@ static const vshCmdOptDef opts_migrate[] = {
      .type = VSH_OT_BOOL,
      .help = N_("compress repeated pages during live migration")
     },
+    {.name = "dirty-limit",
+     .type = VSH_OT_BOOL,
+     .help = N_("force convergence with dirty-limit algorithim during live migration")
+    },
     {.name = "auto-converge",
      .type = VSH_OT_BOOL,
      .help = N_("force convergence during live migration")
@@ -11108,6 +11112,7 @@ doMigrate(void *opaque)
         { "change-protection", VIR_MIGRATE_CHANGE_PROTECTION },
         { "unsafe", VIR_MIGRATE_UNSAFE },
         { "compressed", VIR_MIGRATE_COMPRESSED },
+        { "dirty-limit", VIR_MIGRATE_DIRTY_LIMIT },
         { "auto-converge", VIR_MIGRATE_AUTO_CONVERGE },
         { "rdma-pin-all", VIR_MIGRATE_RDMA_PIN_ALL },
         { "offline", VIR_MIGRATE_OFFLINE },
@@ -11132,6 +11137,11 @@ doMigrate(void *opaque)
     for (i = 0; i < G_N_ELEMENTS(flagmap); i++) {
         if (vshCommandOptBool(cmd, flagmap[i].optionname))
             flags |= flagmap[i].migflag;
+    }
+
+    if (flags & VIR_MIGRATE_DIRTY_LIMIT && flags & VIR_MIGRATE_AUTO_CONVERGE) {
+        vshError(ctl, "'--dirty-limit' conflicts with '--auto-converge'");
+        goto out;
     }
 
     if (flags & VIR_MIGRATE_NON_SHARED_SYNCHRONOUS_WRITES &&
