@@ -17,6 +17,14 @@ v9.10.0 (unreleased)
 
 * **New features**
 
+  * QEMU: Support dirty-limit live migration
+
+    Introduce ``VIR_MIGRATE_DIRTY_LIMIT`` flag for live migration API,
+    which can enable the dirty-limit convergence algorithm during live
+    migration and reap more stable read performance for guest vCPUs.
+
+    Also, add the corresponding ``--dirty-limit`` option to ``virsh migrate``.
+
   * Introduce pipewire audio backend
 
     The QEMU hypervisor driver now allows setting ``pipewire`` backend for
