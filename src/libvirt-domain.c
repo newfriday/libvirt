@@ -14162,3 +14162,59 @@ virDomainGraphicsReload(virDomainPtr domain,
     virDispatchError(domain->conn);
     return -1;
 }
+
+
+/**
+ * virDomainSetVcpuTuneParameters:
+ * @domain: pointer to domain object
+ * @vcpumap: text representation of a bitmap of vcpus to set
+ * @params: pointer to virtual CPU parameter objects
+ * @nparams: number of virtual CPU tunable parameter
+ * @flags: bitwise-OR of virDomainModificationImpact
+ *
+ * Change all or a subset of the virtual CPU tunables.
+ *
+ * Returns 0 in case of success, -1 in case of failure.
+ *
+ * Since: 11.1.0
+ */
+int
+virDomainSetVcpuTuneParameters(virDomainPtr domain,
+                               const char *vcpumap,
+                               virTypedParameterPtr params,
+                               int nparams,
+                               unsigned int flags)
+{
+    virConnectPtr conn;
+
+    VIR_DOMAIN_DEBUG(domain, "vcpumap='%s', params=%p, nparams=%d, flags=0x%x",
+                     vcpumap, params, nparams, flags);
+
+    virResetLastError();
+
+    virCheckDomainReturn(domain, -1);
+    conn = domain->conn;
+
+    virCheckReadOnlyGoto(conn->flags, error);
+    virCheckNonNullArgGoto(vcpumap, error);
+    virCheckNonNullArgGoto(params, error);
+    virCheckPositiveArgGoto(nparams, error);
+
+    if (virTypedParameterValidateSet(conn, params, nparams) < 0)
+        goto error;
+
+    if (conn->driver->domainSetVcpuTuneParameters) {
+        int ret;
+        ret = conn->driver->domainSetVcpuTuneParameters(domain, vcpumap, params,
+                                                        nparams, flags);
+        if (ret < 0)
+            goto error;
+        return ret;
+    }
+
+    virReportUnsupportedError();
+
+ error:
+    virDispatchError(domain->conn);
+    return -1;
+}

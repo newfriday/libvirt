@@ -6612,4 +6612,17 @@ virDomainGraphicsReload(virDomainPtr domain,
                         unsigned int type,
                         unsigned int flags);
 
+/**
+ * virDomainSetVcpuTuneParameters:
+ *
+ * Set virtual CPU tunables for the domain
+ *
+ * Since: 11.1.0
+ */
+int
+virDomainSetVcpuTuneParameters(virDomainPtr domain,
+                               const char *vcpumap,
+                               virTypedParameterPtr params,
+                               int nparams,
+                               unsigned int flags);
 #endif /* LIBVIRT_DOMAIN_H */
