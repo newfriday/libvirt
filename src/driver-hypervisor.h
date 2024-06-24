@@ -1453,6 +1453,13 @@ typedef int
                               unsigned int type,
                               unsigned int flags);
 
+typedef int
+(*virDrvDomainSetVcpuTuneParameters)(virDomainPtr domain,
+                                     const char *vcpumap,
+                                     virTypedParameterPtr params,
+                                     int nparams,
+                                     unsigned int flags);
+
 typedef struct _virHypervisorDriver virHypervisorDriver;
 
 /**
@@ -1726,4 +1733,5 @@ struct _virHypervisorDriver {
     virDrvDomainStartDirtyRateCalc domainStartDirtyRateCalc;
     virDrvDomainFDAssociate domainFDAssociate;
     virDrvDomainGraphicsReload domainGraphicsReload;
+    virDrvDomainSetVcpuTuneParameters domainSetVcpuTuneParameters;
 };

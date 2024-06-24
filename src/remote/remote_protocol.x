@@ -292,6 +292,9 @@ const REMOTE_DOMAIN_AUTHORIZED_SSH_KEYS_MAX = 2048;
 /* Upper limit on number of messages */
 const REMOTE_DOMAIN_MESSAGES_MAX = 2048;
 
+/* Upper limit on VCPU tunable parameters. */
+const REMOTE_DOMAIN_SET_VCPU_TUNE_PARAMETERS_MAX = 16;
+
 
 /* UUID.  VIR_UUID_BUFLEN definition comes from libvirt.h */
 typedef opaque remote_uuid[VIR_UUID_BUFLEN];
@@ -3973,6 +3976,13 @@ struct remote_domain_fd_associate_args {
     remote_nonnull_string name;
     unsigned int flags;
 };
+
+struct remote_domain_set_vcpu_tune_parameters_args {
+    remote_nonnull_domain dom;
+    remote_nonnull_string cpumap;
+    remote_typed_param params<REMOTE_DOMAIN_SET_VCPU_TUNE_PARAMETERS_MAX>;
+    unsigned int flags;
+};
 /*----- Protocol. -----*/
 
 /* Define the program number, protocol version and procedure numbers here. */
@@ -7048,5 +7058,13 @@ enum remote_procedure {
      * @generate: both
      * @acl: domain:write
      */
-    REMOTE_PROC_DOMAIN_GRAPHICS_RELOAD = 448
+    REMOTE_PROC_DOMAIN_GRAPHICS_RELOAD = 448,
+
+    /**
+     * @generate: both
+     * @acl: domain:write
+     * @acl: domain:save:!VIR_DOMAIN_AFFECT_CONFIG|VIR_DOMAIN_AFFECT_LIVE
+     * @acl: domain:save:VIR_DOMAIN_AFFECT_CONFIG
+     */
+    REMOTE_PROC_DOMAIN_SET_VCPU_TUNE_PARAMETERS = 449
 };
