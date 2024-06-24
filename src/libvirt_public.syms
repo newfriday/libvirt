@@ -946,6 +946,7 @@ LIBVIRT_10.1.0 {
 LIBVIRT_10.2.0 {
     global:
         virDomainGraphicsReload;
+        virDomainSetVcpuTuneParameters;
 } LIBVIRT_10.1.0;
 
 # .... define new API here using predicted next version number ....

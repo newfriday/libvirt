@@ -6535,4 +6535,45 @@ virDomainGraphicsReload(virDomainPtr domain,
                         unsigned int type,
                         unsigned int flags);
 
+/* Virtual CPU set parameters */
+
+/**
+ * VIR_DOMAIN_VCPU_STATE:
+ *
+ * The tunables enable/disables individual vcpus described by @vcpumap
+ * in the hypervisor.
+ *
+ * Since: 10.2.0
+ */
+# define VIR_DOMAIN_VCPU_STATE "state"
+
+/**
+ * VIR_DOMAIN_VCPU_DIRTY_LIMIT:
+ *
+ * The tunables set/cancel the dirty page rate limit(dirty-limit) of
+ * the individual virtual CPU described by @vcpumap in the hypervisor.
+ * Dirty-limit throttle the virtual CPU as needed to keep their dirty
+ * page rate within the limit set. Since it just throttles the virtual
+ * CPU, which dirties memory, read processes in the guest OS aren't
+ * penalized. This could, in some scenes, be used to provide
+ * quality-of-service in the aspect of the memory workload for virtual
+ * CPUs.
+ *
+ * Since: 10.2.0
+ */
+# define VIR_DOMAIN_VCPU_DIRTY_LIMIT "dirty_limit"
+
+/**
+ * virDomainSetVcpuTuneParameters:
+ *
+ * Set virtual CPU tunables for the domain
+ *
+ * Since: 10.2.0
+ */
+int
+virDomainSetVcpuTuneParameters(virDomainPtr domain,
+                               const char *vcpumap,
+                               virTypedParameterPtr params,
+                               int nparams,
+                               unsigned int flags);
 #endif /* LIBVIRT_DOMAIN_H */
