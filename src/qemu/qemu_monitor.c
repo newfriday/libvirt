@@ -4508,3 +4508,15 @@ qemuMonitorDisplayReload(qemuMonitor *mon,
 
     return qemuMonitorJSONDisplayReload(mon, type, tlsCerts);
 }
+
+int
+qemuMonitorSetVcpuDirtyLimit(qemuMonitor *mon,
+                             int vcpu,
+                             unsigned long long rate)
+{
+    VIR_DEBUG("set vcpu %d dirty page rate limit %llu", vcpu, rate);
+
+    QEMU_CHECK_MONITOR(mon);
+
+    return qemuMonitorJSONSetVcpuDirtyLimit(mon, vcpu, rate);
+}

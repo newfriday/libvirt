@@ -1616,3 +1616,8 @@ int
 qemuMonitorDisplayReload(qemuMonitor *mon,
                          const char *type,
                          bool tlsCerts);
+
+int
+qemuMonitorSetVcpuDirtyLimit(qemuMonitor *mon,
+                             int vcpu,
+                             unsigned long long rate);

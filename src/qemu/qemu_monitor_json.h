@@ -825,3 +825,8 @@ qemuMonitorJSONQueryStats(qemuMonitor *mon,
 int qemuMonitorJSONDisplayReload(qemuMonitor *mon,
                                  const char *type,
                                  bool tlsCerts);
+
+int
+qemuMonitorJSONSetVcpuDirtyLimit(qemuMonitor *mon,
+                                 int vcpu,
+                                 unsigned long long rate);
