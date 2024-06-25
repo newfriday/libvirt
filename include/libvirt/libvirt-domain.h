@@ -6612,6 +6612,18 @@ virDomainGraphicsReload(virDomainPtr domain,
                         unsigned int type,
                         unsigned int flags);
 
+/* Virtual CPU set parameters */
+
+/**
+ * VIR_DOMAIN_VCPU_STATE:
+ *
+ * The tunable enable/disable individual vcpus described by @vcpumap
+ * in the hypervisor*
+ *
+ * Since: 11.1.0
+ */
+# define VIR_DOMAIN_VCPU_STATE "state"
+
 /**
  * virDomainSetVcpuTuneParameters:
  *
