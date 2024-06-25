@@ -20037,6 +20037,34 @@ qemuDomainGraphicsReload(virDomainPtr domain,
     return ret;
 }
 
+static int
+qemuDomainSetVcpuTuneParameters(virDomainPtr dom,
+                                const char *vcpumap,
+                                virTypedParameterPtr params,
+                                int nparams,
+                                unsigned int flags)
+{
+    int state;
+    int rc;
+
+    if (virTypedParamsValidate(params, nparams,
+                               VIR_DOMAIN_VCPU_STATE,
+                               VIR_TYPED_PARAM_INT,
+                               NULL) < 0)
+        return -1;
+
+    if ((rc = virTypedParamsGetInt(params, nparams,
+                                   VIR_DOMAIN_VCPU_STATE,
+                                   &state)) < 0)
+        return -1;
+
+    if (rc == 1) {
+        return qemuDomainSetVcpu(dom, vcpumap, state, flags);
+    }
+
+    return 0;
+}
+
 static virHypervisorDriver qemuHypervisorDriver = {
     .name = QEMU_DRIVER_NAME,
     .connectURIProbe = qemuConnectURIProbe,
@@ -20287,6 +20315,7 @@ static virHypervisorDriver qemuHypervisorDriver = {
     .domainSetLaunchSecurityState = qemuDomainSetLaunchSecurityState, /* 8.0.0 */
     .domainFDAssociate = qemuDomainFDAssociate, /* 9.0.0 */
     .domainGraphicsReload = qemuDomainGraphicsReload, /* 10.2.0 */
+    .domainSetVcpuTuneParameters = qemuDomainSetVcpuTuneParameters, /* 10.2.0 */
 };
 
 
