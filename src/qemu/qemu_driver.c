@@ -19995,6 +19995,164 @@ qemuDomainGraphicsReload(virDomainPtr domain,
     return ret;
 }
 
+static void
+qemuDomainSetDirtyLimit(virDomainVcpuDef *vcpu,
+                        unsigned long long rate)
+{
+    if (rate > 0) {
+        vcpu->dirtyLimitSet = true;
+        vcpu->dirty_limit = rate;
+    } else {
+        vcpu->dirtyLimitSet = false;
+        vcpu->dirty_limit = 0;
+    }
+}
+
+static void
+qemuDomainSetVcpuDirtyLimitConfig(virDomainDef *def,
+                                  int vcpu,
+                                  unsigned long long rate)
+{
+    def->individualvcpus = true;
+
+    if (vcpu == -1) {
+        size_t maxvcpus = virDomainDefGetVcpusMax(def);
+        size_t i;
+        for (i = 0; i < maxvcpus; i++) {
+            qemuDomainSetDirtyLimit(virDomainDefGetVcpu(def, i), rate);
+        }
+    } else {
+        qemuDomainSetDirtyLimit(virDomainDefGetVcpu(def, vcpu), rate);
+    }
+}
+
+static int
+qemuDomainSetVcpuDirtyLimitInternal(virQEMUDriver *driver,
+                                    virDomainObj *vm,
+                                    virDomainDef *def,
+                                    virDomainDef *persistentDef,
+                                    int vcpu,
+                                    unsigned long long rate)
+{
+    g_autoptr(virQEMUDriverConfig) cfg = virQEMUDriverGetConfig(driver);
+    qemuDomainObjPrivate *priv = vm->privateData;
+
+    VIR_DEBUG("vcpu %d, rate %llu", vcpu, rate);
+    if (def) {
+        qemuDomainObjEnterMonitor(vm);
+        if (qemuMonitorSetVcpuDirtyLimit(priv->mon, vcpu, rate) < 0) {
+            virReportError(VIR_ERR_INTERNAL_ERROR, "%s",
+                           _("Failed to set dirty page rate limit"));
+            qemuDomainObjExitMonitor(vm);
+            return -1;
+        }
+        qemuDomainObjExitMonitor(vm);
+        qemuDomainSetVcpuDirtyLimitConfig(def, vcpu, rate);
+    }
+
+    if (persistentDef) {
+        qemuDomainSetVcpuDirtyLimitConfig(persistentDef, vcpu, rate);
+        if (virDomainDefSave(persistentDef, driver->xmlopt, cfg->configDir) < 0)
+            return -1;
+    }
+
+    return 0;
+}
+
+static int
+qemuDomainSetVcpuDirtyLimit(virDomainPtr domain,
+                            int vcpu,
+                            unsigned long long rate,
+                            unsigned int flags)
+{
+    virQEMUDriver *driver = domain->conn->privateData;
+    virDomainObj *vm = NULL;
+    qemuDomainObjPrivate *priv;
+    virDomainDef *def = NULL;
+    virDomainDef *persistentDef = NULL;
+    int ret = -1;
+
+    virCheckFlags(VIR_DOMAIN_AFFECT_LIVE |
+                  VIR_DOMAIN_AFFECT_CONFIG, -1);
+
+    if (!(vm = qemuDomainObjFromDomain(domain)))
+        return -1;
+
+    if (virDomainSetVcpuDirtyLimitEnsureACL(domain->conn, vm->def, flags) < 0)
+        goto cleanup;
+
+    if (virDomainObjBeginJob(vm, VIR_JOB_MODIFY) < 0)
+        goto cleanup;
+
+    if (virDomainObjGetDefs(vm, flags, &def, &persistentDef) < 0)
+        goto endjob;
+
+    if (persistentDef) {
+        if (vcpu >= 0 && vcpu >= (int)virDomainDefGetVcpusMax(persistentDef)) {
+            virReportError(VIR_ERR_INVALID_ARG,
+                           _("vcpu %1$d is not present in persistent config"),
+                           vcpu);
+            goto endjob;
+        }
+    }
+
+    if (def) {
+        if (virDomainObjCheckActive(vm) < 0)
+            goto endjob;
+
+        priv = vm->privateData;
+        if (!virQEMUCapsGet(priv->qemuCaps, QEMU_CAPS_VCPU_DIRTY_LIMIT)) {
+            virReportError(VIR_ERR_OPERATION_UNSUPPORTED, "%s",
+                           _("QEMU does not support setting dirty page rate limit"));
+            goto endjob;
+        }
+
+        if (vcpu >= 0 && vcpu >= (int)virDomainDefGetVcpusMax(def)) {
+            virReportError(VIR_ERR_INVALID_ARG,
+                           _("vcpu %1$d is not present in live config"),
+                           vcpu);
+            goto endjob;
+        }
+    }
+
+    ret = qemuDomainSetVcpuDirtyLimitInternal(driver, vm, def, persistentDef,
+                                              vcpu, rate);
+
+ endjob:
+    virDomainObjEndJob(vm);
+
+ cleanup:
+    virDomainObjEndAPI(&vm);
+    return ret;
+}
+
+static int
+qemuDomainSetVcpuTuneParameters(virDomainPtr dom,
+                                int vcpu,
+                                virTypedParameterPtr params,
+                                int nparams,
+                                unsigned int flags)
+{
+    unsigned long long rate;
+    int rc;
+
+    if (virTypedParamsValidate(params, nparams,
+                               VIR_DOMAIN_VCPU_DIRTY_LIMIT,
+                               VIR_TYPED_PARAM_ULLONG,
+                               NULL) < 0)
+        return -1;
+
+    if (virTypedParamsGetULLong(params, nparams,
+                                VIR_DOMAIN_VCPU_DIRTY_LIMIT,
+                                &rate) < 0)
+        return -1;
+
+    if (qemuDomainSetVcpuDirtyLimit(dom, vcpu, rate, flags) < 0)
+        return -1;
+
+}
+
+
 static virHypervisorDriver qemuHypervisorDriver = {
     .name = QEMU_DRIVER_NAME,
     .connectURIProbe = qemuConnectURIProbe,
@@ -20245,6 +20403,7 @@ static virHypervisorDriver qemuHypervisorDriver = {
     .domainSetLaunchSecurityState = qemuDomainSetLaunchSecurityState, /* 8.0.0 */
     .domainFDAssociate = qemuDomainFDAssociate, /* 9.0.0 */
     .domainGraphicsReload = qemuDomainGraphicsReload, /* 10.2.0 */
+    .domainSetVcpuTuneParameters = qemuDomainSetVcpuTuneParameters, /* 10.2.0 */
 };
 
 
