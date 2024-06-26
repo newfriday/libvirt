@@ -7330,6 +7330,7 @@ cmdSetvcpu(vshControl *ctl, const vshCmd *cmd)
     const char *vcpulist = NULL;
     int state = 0;
     unsigned int flags = VIR_DOMAIN_AFFECT_CURRENT;
+    virTypedParameterPtr params = NULL;
 
     VSH_EXCLUSIVE_OPTIONS_VAR(enable, disable);
 
@@ -7355,7 +7356,14 @@ cmdSetvcpu(vshControl *ctl, const vshCmd *cmd)
     if (enable)
         state = 1;
 
-    if (virDomainSetVcpu(dom, vcpulist, state, flags) < 0)
+    params = g_new0(virTypedParameter, 1);
+    if (virTypedParameterAssign(&params[0],
+                                VIR_DOMAIN_VCPU_STATE,
+                                VIR_TYPED_PARAM_INT,
+                                state) < 0)
+        return false;
+
+    if (virDomainSetVcpuTuneParameters(dom, vcpulist, params, 1, flags) < 0)
         return false;
 
     return true;
