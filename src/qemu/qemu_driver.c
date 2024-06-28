@@ -20037,6 +20037,151 @@ qemuDomainGraphicsReload(virDomainPtr domain,
     return ret;
 }
 
+static void
+qemuDomainSetDirtyLimit(virDomainVcpuDef *vcpu,
+                        unsigned long long rate)
+{
+    if (rate > 0) {
+        vcpu->dirtyLimitSet = true;
+        vcpu->dirty_limit = rate;
+    } else {
+        vcpu->dirtyLimitSet = false;
+        vcpu->dirty_limit = 0;
+    }
+}
+
+static void
+qemuDomainSetVcpuDirtyLimitConfig(virDomainDef *def,
+                                  int vcpu,
+                                  unsigned long long rate)
+{
+    def->individualvcpus = true;
+
+    if (vcpu == -1) {
+        size_t maxvcpus = virDomainDefGetVcpusMax(def);
+        size_t i;
+        for (i = 0; i < maxvcpus; i++) {
+            qemuDomainSetDirtyLimit(virDomainDefGetVcpu(def, i), rate);
+        }
+    } else {
+        qemuDomainSetDirtyLimit(virDomainDefGetVcpu(def, vcpu), rate);
+    }
+}
+
+static int
+qemuDomainSetVcpuDirtyLimitInternal(virQEMUDriver *driver,
+                                    virDomainObj *vm,
+                                    virDomainDef *def,
+                                    virDomainDef *persistentDef,
+                                    const char *vcpumap,
+                                    unsigned long long rate)
+{
+    g_autoptr(virQEMUDriverConfig) cfg = virQEMUDriverGetConfig(driver);
+    qemuDomainObjPrivate *priv = vm->privateData;
+    ssize_t nextvcpu = -1;
+
+    while ((nextvcpu = virBitmapNextSetBit(vcpumap, nextvcpu)) != -1) {
+        VIR_DEBUG("vcpu %d, rate %llu", nextvcpu, rate);
+        if (def) {
+            qemuDomainObjEnterMonitor(vm);
+            if (qemuMonitorSetVcpuDirtyLimit(priv->mon, nextvcpu, rate) < 0) {
+                virReportError(VIR_ERR_INTERNAL_ERROR, "%s",
+                               _("Failed to set dirty page rate limit"));
+                qemuDomainObjExitMonitor(vm);
+                return -1;
+            }
+            qemuDomainObjExitMonitor(vm);
+            qemuDomainSetVcpuDirtyLimitConfig(def, nextvcpu, rate);
+        }
+
+        if (persistentDef) {
+            qemuDomainSetVcpuDirtyLimitConfig(persistentDef, nextvcpu, rate);
+            if (virDomainDefSave(persistentDef, driver->xmlopt, cfg->configDir) < 0)
+                return -1;
+        }
+    }
+
+    return 0;
+}
+
+static int
+qemuDomainSetVcpuDirtyLimit(virDomainPtr domain,
+                            const char *vcpumap,
+                            unsigned long long rate,
+                            unsigned int flags)
+{
+    virQEMUDriver *driver = domain->conn->privateData;
+    virDomainObj *vm = NULL;
+    qemuDomainObjPrivate *priv;
+    virDomainDef *def = NULL;
+    virDomainDef *persistentDef = NULL;
+    g_autoptr(virBitmap) map = NULL;
+    ssize_t lastvcpu;
+    int ret = -1;
+
+    virCheckFlags(VIR_DOMAIN_AFFECT_LIVE |
+                  VIR_DOMAIN_AFFECT_CONFIG, -1);
+
+    if (virBitmapParse(vcpumap, &map, QEMU_GUEST_VCPU_MAX_ID) < 0)
+        goto cleanup;
+
+    if ((lastvcpu = virBitmapLastSetBit(map)) < 0) {
+        virReportError(VIR_ERR_INVALID_ARG, "%s",
+                       _("no vcpus selected for modification"));
+        goto cleanup;
+    }
+
+    if (!(vm = qemuDomainObjFromDomain(domain)))
+        return -1;
+
+    if (virDomainSetVcpuDirtyLimitEnsureACL(domain->conn, vm->def, flags) < 0)
+        goto cleanup;
+
+    if (virDomainObjBeginJob(vm, VIR_JOB_MODIFY) < 0)
+        goto cleanup;
+
+    if (virDomainObjGetDefs(vm, flags, &def, &persistentDef) < 0)
+        goto endjob;
+
+    if (persistentDef) {
+        if (vcpu >= 0 && vcpu >= (int)virDomainDefGetVcpusMax(persistentDef)) {
+            virReportError(VIR_ERR_INVALID_ARG,
+                           _("vcpu %1$d is not present in persistent config"),
+                           vcpu);
+            goto endjob;
+        }
+    }
+
+    if (def) {
+        if (virDomainObjCheckActive(vm) < 0)
+            goto endjob;
+
+        priv = vm->privateData;
+        if (!virQEMUCapsGet(priv->qemuCaps, QEMU_CAPS_VCPU_DIRTY_LIMIT)) {
+            virReportError(VIR_ERR_OPERATION_UNSUPPORTED, "%s",
+                           _("QEMU does not support setting dirty page rate limit"));
+            goto endjob;
+        }
+
+        if (vcpu >= 0 && vcpu >= (int)virDomainDefGetVcpusMax(def)) {
+            virReportError(VIR_ERR_INVALID_ARG,
+                           _("vcpu %1$d is not present in live config"),
+                           vcpu);
+            goto endjob;
+        }
+    }
+
+    ret = qemuDomainSetVcpuDirtyLimitInternal(driver, vm, def, persistentDef,
+                                              map, rate);
+
+ endjob:
+    virDomainObjEndJob(vm);
+
+ cleanup:
+    virDomainObjEndAPI(&vm);
+    return ret;
+}
+
 static int
 qemuDomainSetVcpuTuneParameters(virDomainPtr dom,
                                 const char *vcpumap,
@@ -20045,11 +20190,14 @@ qemuDomainSetVcpuTuneParameters(virDomainPtr dom,
                                 unsigned int flags)
 {
     int state;
-    int rc;
+    unsigned long long rate;
+    int rc, tune_state, tune_dirty_limit;
 
     if (virTypedParamsValidate(params, nparams,
                                VIR_DOMAIN_VCPU_STATE,
                                VIR_TYPED_PARAM_INT,
+                               VIR_DOMAIN_VCPU_DIRTY_LIMIT,
+                               VIR_TYPED_PARAM_ULLONG,
                                NULL) < 0)
         return -1;
 
@@ -20058,8 +20206,25 @@ qemuDomainSetVcpuTuneParameters(virDomainPtr dom,
                                    &state)) < 0)
         return -1;
 
-    if (rc == 1) {
-        return qemuDomainSetVcpu(dom, vcpumap, state, flags);
+    tune_state = rc;
+
+    if ((rc = virTypedParamsGetULLong(params, nparams,
+                                      VIR_DOMAIN_VCPU_DIRTY_LIMIT,
+                                      &rate)) < 0)
+        return -1;
+
+    tune_dirty_limit = rc;
+
+    if (tune_state && qemuDomainSetVcpu(dom, vcpumap, state, flags) < 0) {
+        virReportError(VIR_ERR_OPERATION_INVALID, "%s",
+                       _("unable to set vcpu state"));
+        return -1;
+    }
+
+    if (tune_dirty_limit && qemuDomainSetVcpuDirtyLimit(dom, vcpumap, rate, flags) < 0) {
+        virReportError(VIR_ERR_OPERATION_INVALID, "%s",
+                       _("unable to set vcpu dirty-limit"));
+        return -1;
     }
 
     return 0;
