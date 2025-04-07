@@ -1003,7 +1003,16 @@ int virNetClientSetTLSSession(virNetClient *client,
     ignore_value(pthread_sigmask(SIG_SETMASK, &oldmask, NULL));
 #endif /* !WIN32 */
 
+ reread:
     len = virNetTLSSessionRead(client->tls, buf, 1);
+    /*
+     * GNU TLS advises calling the function again to obtain the data if EAGAIN is returned.
+     * See reference: https://www.gnutls.org/manual/html_node/Data-transfer-and-termination.html
+     * */
+    if (len < 0 && (errno == EAGAIN || errno == EINTR)) {
+        VIR_WARN("Try reading data from the TLS session again");
+        goto reread;
+    }
     if (len < 0 && errno != ENOMSG) {
         virReportSystemError(errno, "%s",
                              _("Unable to read TLS confirmation"));
